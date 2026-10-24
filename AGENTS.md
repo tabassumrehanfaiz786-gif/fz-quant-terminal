@@ -10,3 +10,5 @@
 <!-- LOVABLE:END -->
 
 - Trading strategy rules live in the pure engine src/lib/strategy.ts (covered by strategy.test.ts); UI and the Binance feed hook only call into it, so rules stay testable.
+- Order-book synchronization, snapshots, and wall detection live in the pure src/lib/order-book.ts module with unit tests; the independent depth hook never changes trading decisions.
+- Resting-liquidity history is a bounded browser-session timeline built only from synchronized live Binance spot snapshots; reconnects leave unsampled gaps rather than inventing historical liquidity.
