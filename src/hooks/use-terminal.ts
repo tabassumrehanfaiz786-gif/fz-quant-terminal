@@ -4,7 +4,8 @@ import { createEngine, managePrice, onCandleClose, type Candle, type EngineState
 export type Interval = "1m" | "5m" | "15m";
 type Feed = "connecting" | "live" | "down";
 
-const parseRest = (r: (string | number)[]): Candle => ({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const parseRest = (r: any[]): Candle => ({
   time: Math.floor(Number(r[0]) / 1000), open: +r[1], high: +r[2], low: +r[3], close: +r[4], volume: +r[5], buyVolume: +r[9],
 });
 
@@ -34,7 +35,7 @@ export function useTerminal(interval: Interval) {
         for (const e of [sweep, touch]) {
           e.audit.push({ time: closed[0]?.time ?? 0, kind: "SYSTEM", message: `Replaying ${closed.length} ${interval} candles, balance $${e.cfg.startBalance.toLocaleString()}` });
           for (const c of closed) onCandleClose(e, c);
-          e.audit.push({ time: hist[hist.length - 1].time, kind: "SYSTEM", message: "Replay complete — live paper execution armed" });
+          e.audit.push({ time: hist[hist.length - 1]!.time, kind: "SYSTEM", message: "Replay complete — live paper execution armed" });
         }
         candles.current = hist;
         bump();
