@@ -8,9 +8,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "10K Levels — BTCUSDT Paper Trading Terminal" },
+      { title: "FZ Quant Terminal — BTCUSDT Paper Trading" },
       { name: "description", content: "Automated BTCUSDT paper trading on 10k institutional levels with sweep & reclaim, live Binance feed and risk audit log." },
-      { property: "og:title", content: "10K Levels — BTCUSDT Paper Trading Terminal" },
+      { property: "og:title", content: "FZ Quant Terminal — BTCUSDT Paper Trading" },
       { property: "og:description", content: "Sweep & reclaim vs 10k touch: live paper trading, PnL, equity curve and compliance audit log." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -48,7 +48,7 @@ function Terminal() {
   return (
     <div className="flex h-screen flex-col gap-2 bg-background p-2 font-mono text-xs text-foreground">
       <header className="flex flex-wrap items-center gap-x-6 gap-y-2 border border-border bg-card px-3 py-2">
-        <div className="font-display text-base font-semibold tracking-tight">10K<span className="text-primary">/</span>LEVELS</div>
+        <div className="font-display text-base font-semibold tracking-tight">FZ<span className="text-primary">/</span>Quant Terminal</div>
         <div className="flex items-center gap-2">
           <span className={cn("h-2 w-2 rounded-full", feed === "live" ? "bg-up animate-pulse" : feed === "down" ? "bg-down" : "bg-primary")} />
           <span className="text-muted-foreground">BINANCE · BTCUSDT · {feed.toUpperCase()}</span>
