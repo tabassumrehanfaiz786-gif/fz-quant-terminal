@@ -28,7 +28,7 @@ describe("strategy rules", () => {
     managePrice(s, 67000, 2); // stopped
     onCandleClose(s, k(70100, 70120, 69990, 70000, 5, 10, 3));
     expect(s.position).toBeNull();
-    onCandleClose(s, k(70000, 71100, 70000, 71100, 5, 10, 4));
+    onCandleClose(s, k(71000, 71100, 71000, 71100, 5, 10, 4));
     onCandleClose(s, k(70100, 70120, 69990, 70000, 5, 10, 5));
     expect(s.position).not.toBeNull();
   });

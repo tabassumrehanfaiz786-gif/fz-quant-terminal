@@ -245,11 +245,10 @@ export function onCandleClose(s: EngineState, k: Candle) {
 
 export function stats(s: EngineState) {
   const wins = s.trades.filter((t) => t.pnl > 0).length;
-  const realized = s.trades.reduce((a, t) => a + t.pnl, 0);
   return {
     trades: s.trades.length,
     wins,
     winRate: s.trades.length ? (wins / s.trades.length) * 100 : 0,
-    realized: s.balance - s.cfg.startBalance - (s.position?.realized ?? 0) + 0 * realized,
+    realized: s.trades.reduce((a, t) => a + t.pnl, 0),
   };
 }
