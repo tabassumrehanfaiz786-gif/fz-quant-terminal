@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Trading strategy rules live in the pure engine src/lib/strategy.ts (covered by strategy.test.ts); UI and the Binance feed hook only call into it, so rules stay testable.
