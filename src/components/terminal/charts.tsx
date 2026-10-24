@@ -32,17 +32,17 @@ export function PriceChart({ candles, engine }: { candles: Candle[]; engine: Eng
 
   useEffect(() => {
     const a = api.current;
-    if (!a || !candles.length) return;
+    const last = candles[candles.length - 1];
+    if (!a || !last) return;
     if (a.len !== candles.length || Math.abs(candles.length - a.len) > 1) {
       a.series.setData(candles.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close })));
       a.len = candles.length;
     } else {
-      const c = candles[candles.length - 1];
-      a.series.update({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close });
+      a.series.update({ time: last.time, open: last.open, high: last.high, low: last.low, close: last.close });
     }
     for (const l of a.lines) a.series.removePriceLine(l);
     a.lines = [];
-    const L = nearestLevel(candles[candles.length - 1].close);
+    const L = nearestLevel(last.close);
     const add = (price: number, color: string, title: string, style = 0, width = 1) =>
       a.lines.push(a.series.createPriceLine({ price, color, title, lineStyle: style, lineWidth: width, axisLabelVisible: true }));
     for (const lvl of [L - 10_000, L, L + 10_000]) add(lvl, C.level, `${lvl / 1000}k`, 0, 2);
@@ -54,7 +54,8 @@ export function PriceChart({ candles, engine }: { candles: Candle[]; engine: Eng
       add(p.stop, C.down, p.beMoved ? "BE stop" : "stop", 1);
       if (!p.tp1Hit) add(p.tp1, C.up, "TP1", 1);
     }
-    const first = candles[0].time;
+    const first = candles[0]?.time;
+    if (first === undefined) return;
     a.markers.setMarkers(
       engine.markers.filter((m) => m.time >= first).map((m) => ({
         time: m.time,
