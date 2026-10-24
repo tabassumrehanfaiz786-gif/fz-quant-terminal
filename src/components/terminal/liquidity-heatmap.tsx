@@ -104,7 +104,11 @@ export function LiquidityHeatmap({ data }: { data: DepthData }) {
     }
     ctx.restore();
     ctx.textAlign = "left"; ctx.fillStyle = color("--muted-foreground");
-    for (let i = 0; i <= 8; i++) ctx.fillText(money(center + range - i * range / 4), left + plotW + 8, top + i * plotH / 8 + 3);
+    for (let i = 0; i <= 8; i++) {
+      const yy = top + i * plotH / 8;
+      if (Math.abs(yy - y(last.price)) < 18 || walls.some(w => Math.abs(yy - y(w.price)) < 16)) continue;
+      ctx.fillText(money(center + range - i * range / 4), left + plotW + 8, yy + 3);
+    }
     ctx.textAlign = "center";
     for (let i = 0; i <= 4; i++) ctx.fillText(clock(start + i * (end - start) / 4), Math.max(30, Math.min(left + plotW - 22, left + i * plotW / 4)), height - 8);
     const py = y(last.price);

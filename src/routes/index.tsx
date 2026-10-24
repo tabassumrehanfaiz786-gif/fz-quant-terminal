@@ -28,8 +28,8 @@ const ts = (t: number) => new Date(t * 1000).toISOString().slice(5, 19).replace(
 
 function Panel({ title, children, className, right }: { title: string; children: React.ReactNode; className?: string; right?: React.ReactNode }) {
   return (
-    <section className={cn("flex min-h-0 flex-col border border-border bg-card", className)}>
-      <header className="flex items-center justify-between border-b border-border px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+    <section className={cn("flex min-h-0 min-w-0 flex-col border border-border bg-card", className)}>
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
         <span>{title}</span>{right}
       </header>
       <div className="min-h-0 flex-1">{children}</div>
@@ -60,13 +60,13 @@ function Terminal() {
         </div>
         <div className="text-lg font-semibold tabular-nums">{price ? price.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}</div>
         <div className="text-muted-foreground">Nearest level <span className="text-primary">{price ? `${nearestLevel(price) / 1000}k` : "—"}</span> ({price ? usd(price - nearestLevel(price), 0) : "—"})</div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex min-w-0 flex-wrap items-center gap-2">
           <Seg value={interval} onChange={(v) => setInterval(v as Interval)} options={[["1m", "1m"], ["5m", "5m"], ["15m", "15m"]]} />
           <Seg value={mode} onChange={(v) => setMode(v as Mode)} options={[["sweep", "Institutional Sweep & Reclaim"], ["touch", "Basic 10k Touch"]]} />
         </div>
       </header>
 
-      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         <Stat label="Equity" value={usd(equity)} />
         <Stat label="Balance" value={usd(e.balance)} />
         <Stat label="Unrealized" value={usd(upnl)} cls={tone(upnl)} />
@@ -75,7 +75,7 @@ function Terminal() {
         <Stat label="Position size" value="$50,000" sub="stop cap $2,500" />
       </div>
 
-      <div className="grid min-h-0 flex-1 gap-2 lg:grid-cols-[1fr_380px]">
+      <div className="grid min-h-0 min-w-0 flex-1 gap-2 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="grid min-h-[660px] min-w-0 gap-2 grid-rows-[minmax(460px,1fr)_170px]">
           <Panel title={view === "liquidity" ? "Liquidity · Binance depth" : `Chart · ${interval}`} right={<Seg value={view} onChange={setView} options={[["liquidity", "Heatmap"], ["candles", "Candles"]]} />}>
             <div className={cn("h-full", view !== "liquidity" && "hidden")}><LiquidityHeatmap data={depth} /></div>
@@ -142,7 +142,7 @@ function Terminal() {
 
 function Seg({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: [string, string][] }) {
   return (
-    <div className="flex border border-border">
+    <div className="flex max-w-full flex-wrap border border-border">
       {options.map(([v, l]) => (
         <Button key={v} size="sm" variant="ghost" aria-pressed={value === v} onClick={() => onChange(v)} className={cn("h-auto rounded-none px-2.5 py-1 text-[11px]", value === v ? "bg-primary text-primary-foreground hover:bg-primary" : "text-muted-foreground hover:text-foreground")}>{l}</Button>
       ))}
