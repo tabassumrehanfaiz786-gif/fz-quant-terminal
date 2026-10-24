@@ -53,6 +53,8 @@
   --color-chart-5: var(--chart-5);
   --color-up: var(--up);
   --color-down: var(--down);
+  --color-liquidity: var(--liquidity);
+  --color-wall: var(--wall);
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --font-display: "Space Grotesk", sans-serif;
   --color-sidebar: var(--sidebar);
@@ -101,6 +103,20 @@
   --sidebar-accent-foreground: oklch(0.93 0.01 250);
   --sidebar-border: oklch(0.25 0.01 255);
   --sidebar-ring: oklch(0.78 0.16 70);
+  --liquidity: oklch(0.82 0.19 156);
+  --wall: oklch(0.68 0.24 25);
+  --heat-background: oklch(0.12 0.012 165);
+  --heat-1: oklch(0.20 0.035 165);
+  --heat-2: oklch(0.30 0.075 165);
+  --heat-3: oklch(0.43 0.115 162);
+  --heat-4: oklch(0.57 0.155 159);
+  --heat-5: oklch(0.72 0.18 156);
+  --heat-6: oklch(0.86 0.18 150);
+  --heat-7: oklch(0.94 0.10 145);
+}
+
+.liquidity-spectrum {
+  background: linear-gradient(90deg, var(--heat-1), var(--heat-3), var(--heat-5), var(--heat-7));
 }
 
 @layer base {

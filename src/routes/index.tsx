@@ -4,14 +4,17 @@ import { useTerminal, type Interval } from "@/hooks/use-terminal";
 import { PriceChart, EquityChart } from "@/components/terminal/charts";
 import { stats, unrealized, nearestLevel, type EngineState, type Mode } from "@/lib/strategy";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useOrderBook } from "@/hooks/use-order-book";
+import { LiquidityHeatmap } from "@/components/terminal/liquidity-heatmap";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "FZ Quant Terminal — BTCUSDT Paper Trading" },
-      { name: "description", content: "Automated BTCUSDT paper trading on 10k institutional levels with sweep & reclaim, live Binance feed and risk audit log." },
+      { name: "description", content: "Live BTCUSDT emerald order book liquidity heatmap, large passive order walls, and automated paper trading with Binance market data." },
       { property: "og:title", content: "FZ Quant Terminal — BTCUSDT Paper Trading" },
-      { property: "og:description", content: "Sweep & reclaim vs 10k touch: live paper trading, PnL, equity curve and compliance audit log." },
+      { property: "og:description", content: "Live emerald Binance liquidity heatmap with red resting order walls, BTC price, and paper trading analytics." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -25,8 +28,8 @@ const ts = (t: number) => new Date(t * 1000).toISOString().slice(5, 19).replace(
 
 function Panel({ title, children, className, right }: { title: string; children: React.ReactNode; className?: string; right?: React.ReactNode }) {
   return (
-    <section className={cn("flex min-h-0 flex-col border border-border bg-card", className)}>
-      <header className="flex items-center justify-between border-b border-border px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+    <section className={cn("flex min-h-0 min-w-0 flex-col border border-border bg-card", className)}>
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
         <span>{title}</span>{right}
       </header>
       <div className="min-h-0 flex-1">{children}</div>
@@ -37,6 +40,8 @@ function Panel({ title, children, className, right }: { title: string; children:
 function Terminal() {
   const [interval, setInterval] = useState<Interval>("1m");
   const [mode, setMode] = useState<Mode>("sweep");
+  const [view, setView] = useState("liquidity");
+  const depth = useOrderBook();
   const { candles, engines, feed } = useTerminal(interval);
   const e = engines[mode];
   const price = candles[candles.length - 1]?.close ?? 0;
@@ -46,7 +51,7 @@ function Terminal() {
   const p = e.position;
 
   return (
-    <div className="flex h-screen flex-col gap-2 bg-background p-2 font-mono text-xs text-foreground">
+    <div className="flex min-h-screen flex-col gap-2 bg-background p-2 font-mono text-xs text-foreground lg:h-screen lg:min-h-[920px]">
       <header className="flex flex-wrap items-center gap-x-6 gap-y-2 border border-border bg-card px-3 py-2">
         <div className="font-display text-base font-semibold tracking-tight">FZ<span className="text-primary">/</span>Quant Terminal</div>
         <div className="flex items-center gap-2">
@@ -55,13 +60,13 @@ function Terminal() {
         </div>
         <div className="text-lg font-semibold tabular-nums">{price ? price.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}</div>
         <div className="text-muted-foreground">Nearest level <span className="text-primary">{price ? `${nearestLevel(price) / 1000}k` : "—"}</span> ({price ? usd(price - nearestLevel(price), 0) : "—"})</div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex min-w-0 flex-wrap items-center gap-2">
           <Seg value={interval} onChange={(v) => setInterval(v as Interval)} options={[["1m", "1m"], ["5m", "5m"], ["15m", "15m"]]} />
           <Seg value={mode} onChange={(v) => setMode(v as Mode)} options={[["sweep", "Institutional Sweep & Reclaim"], ["touch", "Basic 10k Touch"]]} />
         </div>
       </header>
 
-      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         <Stat label="Equity" value={usd(equity)} />
         <Stat label="Balance" value={usd(e.balance)} />
         <Stat label="Unrealized" value={usd(upnl)} cls={tone(upnl)} />
@@ -70,10 +75,11 @@ function Terminal() {
         <Stat label="Position size" value="$50,000" sub="stop cap $2,500" />
       </div>
 
-      <div className="grid min-h-0 flex-1 gap-2 lg:grid-cols-[1fr_380px]">
-        <div className="grid min-h-[480px] gap-2 lg:grid-rows-[1fr_170px]">
-          <Panel title={`Chart · ${interval} · ${mode === "sweep" ? "sweep & reclaim" : "10k touch"}`} right={<span>▲ entry ▼ short ■ sweep ● exit</span>}>
-            <PriceChart key={`${interval}-${mode}`} candles={candles} engine={e} />
+      <div className="grid min-h-0 min-w-0 flex-1 gap-2 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="grid min-h-[660px] min-w-0 gap-2 grid-rows-[minmax(460px,1fr)_170px]">
+          <Panel title={view === "liquidity" ? "Liquidity · Binance depth" : `Chart · ${interval}`} right={<Seg value={view} onChange={setView} options={[["liquidity", "Heatmap"], ["candles", "Candles"]]} />}>
+            <div className={cn("h-full", view !== "liquidity" && "hidden")}><LiquidityHeatmap data={depth} /></div>
+            {view === "candles" && <PriceChart key={`${interval}-${mode}`} candles={candles} engine={e} />}
           </Panel>
           <Panel title="Equity curve"><EquityChart key={`${interval}-${mode}`} engine={e} /></Panel>
         </div>
@@ -136,9 +142,9 @@ function Terminal() {
 
 function Seg({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: [string, string][] }) {
   return (
-    <div className="flex border border-border">
+    <div className="flex max-w-full flex-wrap border border-border">
       {options.map(([v, l]) => (
-        <button key={v} onClick={() => onChange(v)} className={cn("px-2.5 py-1 transition-colors", value === v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>{l}</button>
+        <Button key={v} size="sm" variant="ghost" aria-pressed={value === v} onClick={() => onChange(v)} className={cn("h-auto rounded-none px-2.5 py-1 text-[11px]", value === v ? "bg-primary text-primary-foreground hover:bg-primary" : "text-muted-foreground hover:text-foreground")}>{l}</Button>
       ))}
     </div>
   );
