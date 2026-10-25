@@ -14,7 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ai_coach_reports: {
+        Row: {
+          created_at: string
+          id: string
+          report: string
+          trade_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          report: string
+          trade_count: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          report?: string
+          trade_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      paper_trades: {
+        Row: {
+          created_at: string
+          entry: number
+          entry_time: string
+          exit: number
+          exit_time: string
+          id: string
+          level: number
+          mode: string
+          pnl: number
+          reason: string
+          side: string
+          timeframe: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entry: number
+          entry_time: string
+          exit: number
+          exit_time: string
+          id?: string
+          level: number
+          mode: string
+          pnl: number
+          reason: string
+          side: string
+          timeframe: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entry?: number
+          entry_time?: string
+          exit?: number
+          exit_time?: string
+          id?: string
+          level?: number
+          mode?: string
+          pnl?: number
+          reason?: string
+          side?: string
+          timeframe?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
