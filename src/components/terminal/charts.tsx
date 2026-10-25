@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Candle, EngineState } from "@/lib/strategy";
 import { DEFAULT_CONFIG, nearestLevel } from "@/lib/strategy";
 
@@ -11,6 +11,7 @@ export function PriceChart({ candles, engine }: { candles: Candle[]; engine: Eng
   const el = useRef<HTMLDivElement>(null);
   const api = useRef<{ chart: Api; series: Api; markers: Api; lines: Api[]; len: number } | null>(null);
   const lib = useRef<Api>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let disposed = false;
@@ -26,6 +27,7 @@ export function PriceChart({ candles, engine }: { candles: Candle[]; engine: Eng
       });
       const series = chart.addSeries(m.CandlestickSeries, { upColor: C.up, downColor: C.down, wickUpColor: C.up, wickDownColor: C.down, borderVisible: false });
       api.current = { chart, series, markers: m.createSeriesMarkers(series, []), lines: [], len: 0 };
+      setReady(true);
     });
     return () => { disposed = true; api.current?.chart.remove(); api.current = null; };
   }, []);
@@ -37,6 +39,10 @@ export function PriceChart({ candles, engine }: { candles: Candle[]; engine: Eng
     if (a.len !== candles.length || Math.abs(candles.length - a.len) > 1) {
       a.series.setData(candles.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close })));
       a.len = candles.length;
+      if (ready && !a.chart.__framed) {
+        a.chart.timeScale().setVisibleLogicalRange({ from: Math.max(0, candles.length - 70), to: candles.length + 4 });
+        a.chart.__framed = true;
+      }
     } else {
       a.series.update({ time: last.time, open: last.open, high: last.high, low: last.low, close: last.close });
     }
@@ -67,12 +73,13 @@ export function PriceChart({ candles, engine }: { candles: Candle[]; engine: Eng
     );
   });
 
-  return <div ref={el} className="h-full w-full" />;
+  return <div className="relative h-full w-full"><div ref={el} className="h-full w-full" />{!candles.length && <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">Waiting for Binance candles…</div>}</div>;
 }
 
 export function EquityChart({ engine }: { engine: EngineState }) {
   const el = useRef<HTMLDivElement>(null);
   const api = useRef<{ chart: Api; series: Api } | null>(null);
+  const [, setReady] = useState(false);
   useEffect(() => {
     let disposed = false;
     import("lightweight-charts").then((m) => {
@@ -86,6 +93,7 @@ export function EquityChart({ engine }: { engine: EngineState }) {
       });
       const series = chart.addSeries(m.AreaSeries, { lineColor: C.level, topColor: "#f5a52455", bottomColor: "#f5a52405", lineWidth: 2 });
       api.current = { chart, series };
+      setReady(true);
     });
     return () => { disposed = true; api.current?.chart.remove(); api.current = null; };
   }, []);

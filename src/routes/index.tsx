@@ -38,22 +38,23 @@ function Panel({ title, children, className, right }: { title: string; children:
 }
 
 function Terminal() {
-  const [interval, setInterval] = useState<Interval>("1m");
+  const [interval, setInterval] = useState<Interval>("15m");
   const [mode, setMode] = useState<Mode>("sweep");
-  const [view, setView] = useState("liquidity");
+  const [view, setView] = useState("candles");
   const depth = useOrderBook();
-  const { candles, engines, feed } = useTerminal(interval);
+  const { candles, engines, feed, error, retry } = useTerminal(interval);
   const e = engines[mode];
   const price = candles[candles.length - 1]?.close ?? 0;
   const st = stats(e);
   const upnl = unrealized(e, price);
   const equity = e.balance + upnl;
   const p = e.position;
+  const latest = e.trades.at(-1);
 
   return (
     <div className="flex min-h-screen flex-col gap-2 bg-background p-2 font-mono text-xs text-foreground lg:h-screen lg:min-h-[920px]">
       <header className="flex flex-wrap items-center gap-x-6 gap-y-2 border border-border bg-card px-3 py-2">
-        <div className="font-display text-base font-semibold tracking-tight">FZ<span className="text-primary">/</span>Quant Terminal</div>
+        <div className="font-display text-base font-semibold">FZ<span className="text-primary">/</span>Quant Terminal</div>
         <div className="flex items-center gap-2">
           <span className={cn("h-2 w-2 rounded-full", feed === "live" ? "bg-up animate-pulse" : feed === "down" ? "bg-down" : "bg-primary")} />
           <span className="text-muted-foreground">BINANCE · BTCUSDT · {feed.toUpperCase()}</span>
@@ -66,7 +67,21 @@ function Terminal() {
         </div>
       </header>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <section aria-label="Current paper trade" className={cn("border border-border bg-card px-3 py-2", p && "border-up/50")}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-[11px] text-muted-foreground">PAPER · {interval} · {mode === "sweep" ? "Sweep & Reclaim" : "10k Touch"}</span>
+          <span className={cn("font-semibold", p ? tone(upnl) : "text-muted-foreground")}>{p ? `OPEN ${p.side.toUpperCase()} · ${usd(upnl)} uPnL` : !candles.length ? "Loading trade history…" : "NO OPEN POSITION"}</span>
+        </div>
+        {p ? <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-4">
+          <Row k="Entry" v={usd(p.entry)} /><Row k="Stop" v={`${usd(p.stop)}${p.beMoved ? " · BE" : ""}`} />
+          <Row k={p.tp1Hit ? "TP1 taken" : "TP1"} v={usd(p.tp1, 0)} /><Row k="Runner" v={usd(p.target, 0)} />
+          <span className="col-span-2 text-[10px] text-muted-foreground sm:col-span-4">Opened {ts(p.entryTime)} UTC · {p.qty.toFixed(4)} BTC</span>
+        </div> : candles.length > 0 && <p className="mt-1 text-muted-foreground">{latest ? `Latest: ${latest.side.toUpperCase()} @ ${usd(latest.entry)} → ${latest.reason} · ${usd(latest.pnl)} · ${ts(latest.exitTime)} UTC` : "No trade in the loaded candle history."}</p>}
+        {error && <div role="alert" className="mt-2 flex items-center justify-between gap-2 text-down"><span>{error}</span><Button variant="outline" size="sm" onClick={retry}>Retry</Button></div>}
+        {!error && feed === "down" && <div className="mt-2 flex items-center justify-between gap-2 text-down"><span>Live feed disconnected · values may be stale.</span><Button variant="outline" size="sm" onClick={retry}>Reconnect</Button></div>}
+      </section>
+
+      <div className="grid grid-cols-3 gap-1 sm:gap-2 lg:grid-cols-6">
         <Stat label="Equity" value={usd(equity)} />
         <Stat label="Balance" value={usd(e.balance)} />
         <Stat label="Unrealized" value={usd(upnl)} cls={tone(upnl)} />
@@ -151,9 +166,9 @@ function Seg({ value, onChange, options }: { value: string; onChange: (v: string
 }
 function Stat({ label, value, sub, cls }: { label: string; value: string; sub?: string; cls?: string }) {
   return (
-    <div className="border border-border bg-card px-3 py-2">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
-      <div className={cn("text-base font-semibold tabular-nums", cls)}>{value}</div>
+    <div className="min-w-0 border border-border bg-card px-2 py-1.5 sm:px-3 sm:py-2">
+      <div className="text-[10px] uppercase text-muted-foreground">{label}</div>
+      <div className={cn("break-words text-xs font-semibold tabular-nums sm:text-base", cls)}>{value}</div>
       {sub && <div className="text-[10px] text-muted-foreground">{sub}</div>}
     </div>
   );
