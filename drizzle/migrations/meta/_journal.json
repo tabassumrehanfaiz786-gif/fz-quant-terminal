@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792899980856,
+      "tag": "0000_create_paper_trades_and_coach_reports",
+      "breakpoints": true
+    }
+  ]
+}
