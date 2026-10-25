@@ -18,9 +18,9 @@ describe("trade sync helpers", () => {
     expect(s).toMatchObject({ mode: "sweep", timeframe: "15m", side: "long", level: 80000, entry: 80200, exit: 82700, entryTime: 100, exitTime: 200, pnl: 1200, reason: "RUNNER" });
   });
   it("dedupe key distinguishes modes and times", () => {
-    const [a] = toSyncableTrades("sweep", "15m", [t(1, 100, 200)]);
-    const [b] = toSyncableTrades("touch", "15m", [t(1, 100, 200)]);
-    const [c] = toSyncableTrades("sweep", "5m", [t(1, 100, 200)]);
+    const a = toSyncableTrades("sweep", "15m", [t(1, 100, 200)])[0]!;
+    const b = toSyncableTrades("touch", "15m", [t(1, 100, 200)])[0]!;
+    const c = toSyncableTrades("sweep", "5m", [t(1, 100, 200)])[0]!;
     expect(tradeKey(a)).not.toBe(tradeKey(b));
     expect(tradeKey(a)).not.toBe(tradeKey(c));
   });
