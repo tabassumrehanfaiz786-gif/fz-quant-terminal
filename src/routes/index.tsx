@@ -1,5 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Brain, Volume2, VolumeX } from "lucide-react";
+import { AccountControls, useTerminalAccount } from "@/components/terminal/account-controls";
+import { AiCoach } from "@/components/terminal/ai-coach";
+import { useTradeAlerts } from "@/hooks/use-trade-alerts";
+import { useTradeSync } from "@/hooks/use-trade-sync";
+import { loadAlertsMuted, saveAlertsMuted, playChime } from "@/lib/alerts";
 import { useTerminal, type Interval } from "@/hooks/use-terminal";
 import { PriceChart, EquityChart } from "@/components/terminal/charts";
 import { stats, unrealized, nearestLevel, type EngineState, type Mode } from "@/lib/strategy";
@@ -41,9 +47,15 @@ function Terminal() {
   const [interval, setInterval] = useState<Interval>("15m");
   const [mode, setMode] = useState<Mode>("sweep");
   const [view, setView] = useState("candles");
+  const [workspace, setWorkspace] = useState("audit");
+  const [muted, setMuted] = useState(true);
+  const user = useTerminalAccount();
+  useEffect(() => setMuted(loadAlertsMuted()), []);
   const depth = useOrderBook();
   const { candles, engines, feed, error, retry } = useTerminal(interval);
   const e = engines[mode];
+  useTradeAlerts(e, muted);
+  const sync = useTradeSync(engines, interval, user?.id ?? null);
   const price = candles[candles.length - 1]?.close ?? 0;
   const st = stats(e);
   const upnl = unrealized(e, price);
@@ -64,6 +76,9 @@ function Terminal() {
         <div className="ml-auto flex min-w-0 flex-wrap items-center gap-2">
           <Seg value={interval} onChange={(v) => setInterval(v as Interval)} options={[["1m", "1m"], ["5m", "5m"], ["15m", "15m"]]} />
           <Seg value={mode} onChange={(v) => setMode(v as Mode)} options={[["sweep", "Institutional Sweep & Reclaim"], ["touch", "Basic 10k Touch"]]} />
+          <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={muted ? "Enable trade sounds" : "Mute trade sounds"} title={muted ? "Enable trade sounds" : "Mute trade sounds"} onClick={() => { const next = !muted; setMuted(next); saveAlertsMuted(next); if (!next) playChime("entry"); }}>{muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}</Button>
+          <Button size="sm" variant="outline" className="h-7 gap-1.5 text-[11px]" onClick={() => { setWorkspace("coach"); document.getElementById("coach-workspace")?.scrollIntoView({ behavior: "smooth", block: "center" }); }}><Brain className="h-3.5 w-3.5" />AI Coach</Button>
+          <AccountControls user={user} />
         </div>
       </header>
 
@@ -119,8 +134,9 @@ function Terminal() {
               <tbody>{(["sweep", "touch"] as Mode[]).map((m) => <CmpRow key={m} e={engines[m]} price={price} active={m === mode} />)}</tbody>
             </table>
           </Panel>
-          <Panel title="Risk & compliance audit log" className="min-h-[260px]">
-            <ul className="h-full overflow-y-auto p-2">
+          <div id="coach-workspace" className="flex min-h-[320px] min-w-0 flex-col">
+          <Panel title={workspace === "coach" ? "AI trade coach" : "Risk & compliance"} className="h-full flex-1" right={<Seg value={workspace} onChange={setWorkspace} options={[["audit", "Audit"], ["coach", "Coach"]]} />}>
+            {workspace === "coach" ? <AiCoach key={user?.id ?? "guest"} userId={user?.id ?? null} syncStatus={sync} /> : <ul className="h-full overflow-y-auto p-2">
               {[...e.audit].reverse().map((a, i) => (
                 <li key={i} className="flex gap-2 border-b border-border/50 py-1">
                   <span className="shrink-0 text-muted-foreground">{ts(a.time)}</span>
@@ -128,8 +144,9 @@ function Terminal() {
                   <span>{a.message}</span>
                 </li>
               ))}
-            </ul>
+            </ul>}
           </Panel>
+          </div>
         </div>
       </div>
 
