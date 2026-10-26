@@ -1,23 +1,25 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { playChime } from "@/lib/alerts";
-import type { EngineState } from "@/lib/strategy";
+import type { AuditEntry, EngineState } from "@/lib/strategy";
 
 /**
  * Fires a toast + chime for each new ENTRY / PARTIAL / EXIT audit event.
  * The historical replay batch is marked as seen on first sight of an engine,
  * so only live events alert.
  */
-export function useTradeAlerts(engine: EngineState, muted: boolean) {
-  const seen = useRef<{ engine: EngineState; count: number }>({ engine, count: -1 });
+export function useTradeAlerts(engine: EngineState, muted: boolean, historyReady: boolean) {
+  const seen = useRef<{ engine: EngineState; ready: boolean; last: AuditEntry | undefined }>({ engine, ready: false, last: undefined });
 
   useEffect(() => {
-    if (seen.current.engine !== engine) {
-      seen.current = { engine, count: engine.audit.length };
+    if (!historyReady || seen.current.engine !== engine || !seen.current.ready) {
+      seen.current = { engine, ready: historyReady, last: engine.audit.at(-1) };
       return;
     }
-    const fresh = engine.audit.slice(seen.current.count);
-    seen.current.count = engine.audit.length;
+    const previous = seen.current.last;
+    const index = previous ? engine.audit.indexOf(previous) : -1;
+    const fresh = engine.audit.slice(index + 1);
+    seen.current.last = engine.audit.at(-1);
     for (const a of fresh) {
       if (a.kind === "ENTRY") {
         toast.success("Trade opened", { description: a.message });

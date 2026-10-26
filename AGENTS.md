@@ -14,3 +14,5 @@
 - Resting-liquidity history is a bounded browser-session timeline built only from synchronized live Binance spot snapshots; reconnects leave unsampled gaps rather than inventing historical liquidity.
 - Chart initialization triggers a React update after the dynamic import resolves so existing candles and equity render without waiting for a market tick.
 - The top trade summary reads the selected engine only; never invent a position or present replay results as persisted execution records.
+- The AI coach analyzes authenticated saved paper simulations on demand and never changes strategy parameters; reports disclose replay data and retain user risk constraints.
+- Trade alerts baseline the audit after history is ready and track event identity, while cloud sync serializes batches per engine/account to survive resets without overlapping saves.

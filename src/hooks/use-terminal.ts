@@ -14,6 +14,7 @@ export function useTerminal(interval: Interval) {
   const [feed, setFeed] = useState<Feed>("connecting");
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const [historyReady, setHistoryReady] = useState(false);
   const candles = useRef<Candle[]>([]);
   const engines = useRef<{ sweep: EngineState; touch: EngineState }>({ sweep: createEngine("sweep"), touch: createEngine("touch") });
 
@@ -26,6 +27,7 @@ export function useTerminal(interval: Interval) {
     engines.current = { sweep: createEngine("sweep"), touch: createEngine("touch") };
     setFeed("connecting");
     setError(null);
+    setHistoryReady(false);
 
     (async () => {
       try {
@@ -55,6 +57,7 @@ export function useTerminal(interval: Interval) {
           if (current) managePrice(e, current.close, current.time);
         }
         candles.current = hist;
+        setHistoryReady(true);
         bump();
       } catch {
         if (cancelled) return;
@@ -83,5 +86,5 @@ export function useTerminal(interval: Interval) {
     return () => { cancelled = true; ws?.close(); cancelAnimationFrame(raf); };
   }, [interval, attempt]);
 
-  return { candles: candles.current, engines: engines.current, feed, error, retry: () => setAttempt((n) => n + 1) };
+  return { candles: candles.current, engines: engines.current, feed, error, historyReady, retry: () => setAttempt((n) => n + 1) };
 }
