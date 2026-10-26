@@ -9,6 +9,7 @@
 - [x] Verify chart loading and trade visibility on mobile and desktop.
 
 # AI trade coach and alerts
-- [ ] Finish sign-in, saved trade synchronization, and AI coach controls.
-- [ ] Enable live entry, partial-exit, and closing alerts with sound control.
-- [ ] Verify saved reports and alerts through tests and signed-in terminal checks.
+- [x] Finish sign-in, saved trade synchronization, and AI coach controls.
+- [x] Enable live entry, partial-exit, and closing alerts with sound control.
+- [x] Verify replay-safe alerts and sync lifecycle tests, desktop/mobile controls, and a real AI response (18 tests pass).
+- [ ] Verify saving trades and reading back a personalized report while signed in — blocked until the first account signs up.
