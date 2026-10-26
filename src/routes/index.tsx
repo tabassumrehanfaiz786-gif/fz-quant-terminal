@@ -52,9 +52,9 @@ function Terminal() {
   const user = useTerminalAccount();
   useEffect(() => setMuted(loadAlertsMuted()), []);
   const depth = useOrderBook();
-  const { candles, engines, feed, error, retry } = useTerminal(interval);
+  const { candles, engines, feed, error, historyReady, retry } = useTerminal(interval);
   const e = engines[mode];
-  useTradeAlerts(e, muted);
+  useTradeAlerts(e, muted, historyReady);
   const sync = useTradeSync(engines, interval, user?.id ?? null);
   const price = candles[candles.length - 1]?.close ?? 0;
   const st = stats(e);
