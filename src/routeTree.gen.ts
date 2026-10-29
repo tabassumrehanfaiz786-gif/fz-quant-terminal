@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as IcebergsRouteImport } from './routes/icebergs'
 import { Route as TapeRouteImport } from './routes/tape'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IcebergsRoute = IcebergsRouteImport.update({
+  id: '/icebergs',
+  path: '/icebergs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TapeRoute = TapeRouteImport.update({
@@ -25,27 +31,31 @@ const TapeRoute = TapeRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/icebergs': typeof IcebergsRoute
   '/tape': typeof TapeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/icebergs': typeof IcebergsRoute
   '/tape': typeof TapeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/icebergs': typeof IcebergsRoute
   '/tape': typeof TapeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/tape'
+  fullPaths: '/' | '/icebergs' | '/tape'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/tape'
-  id: '__root__' | '/' | '/tape'
+  to: '/' | '/icebergs' | '/tape'
+  id: '__root__' | '/' | '/icebergs' | '/tape'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  IcebergsRoute: typeof IcebergsRoute
   TapeRoute: typeof TapeRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/icebergs': {
+      id: '/icebergs'
+      path: '/icebergs'
+      fullPath: '/icebergs'
+      preLoaderRoute: typeof IcebergsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tape': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  IcebergsRoute: IcebergsRoute,
   TapeRoute: TapeRoute,
 }
 export const routeTree = rootRouteImport
