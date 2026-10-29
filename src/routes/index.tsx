@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Brain, Volume2, VolumeX } from "lucide-react";
 import { AccountControls, useTerminalAccount } from "@/components/terminal/account-controls";
@@ -77,6 +77,7 @@ function Terminal() {
           <Seg value={interval} onChange={(v) => setInterval(v as Interval)} options={[["1m", "1m"], ["5m", "5m"], ["15m", "15m"]]} />
           <Seg value={mode} onChange={(v) => setMode(v as Mode)} options={[["sweep", "Institutional Sweep & Reclaim"], ["touch", "Basic 10k Touch"]]} />
           <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={muted ? "Enable trade sounds" : "Mute trade sounds"} title={muted ? "Enable trade sounds" : "Mute trade sounds"} onClick={() => { const next = !muted; setMuted(next); saveAlertsMuted(next); if (!next) playChime("entry"); }}>{muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}</Button>
+          <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to="/tape">Tape</Link></Button>
           <Button size="sm" variant="outline" className="h-7 gap-1.5 text-[11px]" onClick={() => { setWorkspace("coach"); document.getElementById("coach-workspace")?.scrollIntoView({ behavior: "smooth", block: "center" }); }}><Brain className="h-3.5 w-3.5" />AI Coach</Button>
           <AccountControls user={user} />
         </div>
