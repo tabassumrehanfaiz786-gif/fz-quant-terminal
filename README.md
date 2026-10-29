@@ -18,9 +18,7 @@ This project was built with [Lovable](https://lovable.dev).
 
 ## GitHub
 
-Repository: [github.com/your-username/fz-quant-terminal](https://github.com/your-username/fz-quant-terminal)
-
-> Replace the link above with your actual GitHub repository URL after connecting the project.
+Repository: [https://github.com/tabassumrehanfaiz786-gif/fz-quant-terminal](https://github.com/tabassumrehanfaiz786-gif/fz-quant-terminal)
 
 ## Build with Lovable
 
@@ -35,7 +33,7 @@ Continue developing this project in the [Lovable editor](https://lovable.dev/pro
 Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-git clone https://github.com/your-username/fz-quant-terminal.git
+git clone https://github.com/tabassumrehanfaiz786-gif/fz-quant-terminal.git
 cd fz-quant-terminal
 npm i
 npm run dev
