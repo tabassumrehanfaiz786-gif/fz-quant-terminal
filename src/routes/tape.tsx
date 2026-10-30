@@ -88,6 +88,7 @@ function TapePage() {
         <aside className="flex flex-col gap-3 border border-border bg-card p-3">
           <Section title="Round size to">
             <Pills value={step} options={STEPS} fmt={(s) => (s ? `${s} BTC` : "Raw")} onChange={setStep} />
+          </Section>
           <Section title="Color tiers (BTC ≥)">
             {tiers.map((t, i) => (
               <div key={i} className="flex items-center gap-2">
