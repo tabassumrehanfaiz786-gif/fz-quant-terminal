@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { DEFAULT_TIERS, filterPrints, roundQty, tierFor, type Print, type Tier } from "@/lib/tape";
+import { DEFAULT_TIERS, cohortFor, roundQty, tierFor, type Cohort, type Print, type Tier } from "@/lib/tape";
 
 export const Route = createFileRoute("/tape")({
   head: () => ({
@@ -56,7 +56,6 @@ function TapePage() {
   const [tiers, setTiers] = useState<Tier[]>(DEFAULT_TIERS);
   const [isPaused, setPaused] = useState(false);
 
-  const shown = useMemo(() => filterPrints(prints, minBtc, step).slice(0, MAX), [prints, minBtc, step]);
   const stats = useMemo(() => {
     const cut = Date.now() - 60_000;
     let buy = 0, sell = 0, n = 0;
