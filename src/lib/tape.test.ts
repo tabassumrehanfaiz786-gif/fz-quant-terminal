@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { roundQty, tierFor, filterPrints, DEFAULT_TIERS, type Print } from "./tape";
+import { roundQty, tierFor, filterPrints, cohortFor, DEFAULT_TIERS, type Print } from "./tape";
 
 describe("tape", () => {
   it("rounds order size to the chosen step", () => {
@@ -18,5 +18,11 @@ describe("tape", () => {
       { id: 2, time: 0, price: 1, qty: 0.4, side: "sell" },
     ];
     expect(filterPrints(p, 1, 1).map((x) => x.id)).toEqual([1]);
+  });
+  it("splits orders into retail <1, whale 1-10, institutional >=10 BTC", () => {
+    expect(cohortFor(0.99)).toBe("retail");
+    expect(cohortFor(1)).toBe("whale");
+    expect(cohortFor(9.99)).toBe("whale");
+    expect(cohortFor(10)).toBe("institutional");
   });
 });
