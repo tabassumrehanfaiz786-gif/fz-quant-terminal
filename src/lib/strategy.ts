@@ -25,6 +25,7 @@ export interface Config {
   rearmDistance: number;
   regimeAtrMax: number;
   feeRate: number;
+  stopReverse: boolean;
 }
 
 export const DEFAULT_CONFIG: Config = {
@@ -40,6 +41,7 @@ export const DEFAULT_CONFIG: Config = {
   rearmDistance: 1_000,
   regimeAtrMax: 1_200,
   feeRate: 0.0004,
+  stopReverse: true,
 };
 
 export interface Position {
@@ -55,6 +57,7 @@ export interface Position {
   tp1Hit: boolean;
   beMoved: boolean;
   realized: number;
+  flip?: boolean;
 }
 
 export interface Trade {
@@ -148,6 +151,13 @@ export function managePrice(s: EngineState, price: number, time: number) {
   const move = (price - p.entry) * dir;
   if ((price - p.stop) * dir <= 0) {
     closeQty(s, p.qty, p.stop, time, p.beMoved ? "BE STOP" : "STOP", true);
+    // Stop & reverse: a full-risk stop flips once; the new stop sits beyond the 10k level (still capped).
+    if (s.cfg.stopReverse && !p.beMoved && !p.flip) {
+      const side: Side = p.side === "long" ? "short" : "long";
+      const structure = side === "short" ? p.level + s.cfg.stopBuffer : p.level - s.cfg.stopBuffer;
+      open(s, side, p.level, p.stop, structure, time, "stop & reverse");
+      s.position!.flip = true;
+    }
     return;
   }
   if (!p.tp1Hit && move >= s.cfg.tp1Distance) {

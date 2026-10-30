@@ -32,4 +32,14 @@ describe("strategy rules", () => {
     onCandleClose(s, k(70100, 70120, 69990, 70000, 5, 10, 5));
     expect(s.position).not.toBeNull();
   });
+  it("reverses once after a full stop with stop beyond the 10k level", () => {
+    const s = createEngine("touch");
+    onCandleClose(s, k(70100, 70120, 69990, 70000));
+    managePrice(s, 67000, 2);
+    expect(s.position!.side).toBe("short");
+    expect(s.position!.entry).toBe(67500);
+    expect(s.position!.stop).toBe(70000);
+    managePrice(s, 71000, 3);
+    expect(s.position).toBeNull();
+  });
 });
