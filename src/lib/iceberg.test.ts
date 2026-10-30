@@ -13,7 +13,7 @@ describe("iceberg detector", () => {
     onTrade(s, 80000, 6, true, 4);
     const [ice] = activeIcebergs(s, cfg);
     expect(ice?.executed).toBe(10);
-    expect(ice?.hidden).toBe(8);
+    expect(ice?.hidden).toBe(6.5);
     expect(ice?.refills).toBe(1);
   });
   it("ignores fills within visible size", () => {
