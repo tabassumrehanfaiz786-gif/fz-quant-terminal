@@ -20,7 +20,6 @@ export const Route = createFileRoute("/tape")({
 
 const MAX = 400;
 const STEPS = [0, 0.1, 0.5, 1, 5, 10];
-const MINS = [0, 0.5, 1, 5, 20];
 
 function useTape() {
   const [prints, setPrints] = useState<Print[]>([]);
@@ -54,7 +53,6 @@ function useTape() {
 function TapePage() {
   const { prints, live, paused } = useTape();
   const [step, setStep] = useState(0.1);
-  const [minBtc, setMinBtc] = useState(0.5);
   const [tiers, setTiers] = useState<Tier[]>(DEFAULT_TIERS);
   const [isPaused, setPaused] = useState(false);
 
@@ -86,13 +84,10 @@ function TapePage() {
         </div>
       </header>
 
-      <div className="grid gap-2 lg:grid-cols-[320px_1fr]">
+      <div className="grid gap-2 xl:grid-cols-[280px_1fr]">
         <aside className="flex flex-col gap-3 border border-border bg-card p-3">
           <Section title="Round size to">
             <Pills value={step} options={STEPS} fmt={(s) => (s ? `${s} BTC` : "Raw")} onChange={setStep} />
-          </Section>
-          <Section title="Minimum size">
-            <Pills value={minBtc} options={MINS} fmt={(s) => (s ? `≥ ${s}` : "All")} onChange={setMinBtc} />
           </Section>
           <Section title="Color tiers (BTC ≥)">
             {tiers.map((t, i) => (
@@ -114,29 +109,79 @@ function TapePage() {
           </Section>
         </aside>
 
-        <section className="min-w-0 border border-border bg-card">
-          <div className="grid grid-cols-[90px_1fr_1fr_1fr] gap-2 border-b border-border px-3 py-1.5 text-[10px] uppercase tracking-widest text-muted-foreground sm:grid-cols-[110px_60px_1fr_1fr_1fr]">
-            <span>Time</span><span className="hidden sm:block">Side</span><span className="text-right">Price</span><span className="text-right">Size BTC</span><span className="text-right">USD</span>
+        <CohortTape prints={prints} step={step} tiers={tiers} />
+      </div>
+    </div>
+  );
+}
+
+const COHORTS: { id: Cohort; label: string; range: string }[] = [
+  { id: "retail", label: "Retail", range: "< 1 BTC" },
+  { id: "whale", label: "Whale", range: "1 – 10 BTC" },
+  { id: "institutional", label: "Institutional", range: "≥ 10 BTC" },
+];
+
+function CohortTape({ prints, step, tiers }: { prints: Print[]; step: number; tiers: Tier[] }) {
+  const [tab, setTab] = useState<Cohort>("institutional");
+  const groups = useMemo(() => {
+    const g: Record<Cohort, Print[]> = { retail: [], whale: [], institutional: [] };
+    for (const p of prints) g[cohortFor(p.qty)].push(p);
+    return g;
+  }, [prints]);
+  return (
+    <section className="flex min-w-0 flex-col gap-2">
+      <div className="flex gap-1 lg:hidden">
+        {COHORTS.map((c) => (
+          <Button key={c.id} size="sm" variant={tab === c.id ? "default" : "outline"} className="h-8 flex-1 text-[11px]" onClick={() => setTab(c.id)}>
+            {c.label} ({groups[c.id].length})
+          </Button>
+        ))}
+      </div>
+      <div className="grid gap-2 lg:grid-cols-3">
+        {COHORTS.map((c) => (
+          <div key={c.id} className={cn("min-w-0", tab !== c.id && "hidden lg:block")}>
+            <Column title={c.label} range={c.range} prints={groups[c.id]} step={step} tiers={tiers} />
           </div>
-          <div className="h-[calc(100vh-110px)] min-h-[500px] overflow-y-auto">
-            {shown.length === 0 && <div className="p-6 text-center text-muted-foreground">Waiting for prints matching your filter…</div>}
-            {shown.map((p) => {
-              const q = roundQty(p.qty, step);
-              const t = tierFor(q, tiers);
-              const big = t.minBtc >= (tiers[tiers.length - 1]?.minBtc ?? Infinity);
-              return (
-                <div key={p.id} className={cn("grid grid-cols-[90px_1fr_1fr_1fr] gap-2 border-b border-border/40 px-3 py-1 tabular-nums sm:grid-cols-[110px_60px_1fr_1fr_1fr]", big && "font-semibold")}
-                  style={{ color: t.color, backgroundColor: `${t.color}${big ? "33" : "14"}`, borderLeft: `3px solid ${p.side === "buy" ? "var(--up)" : "var(--down)"}` }}>
-                  <span className="text-muted-foreground">{new Date(p.time).toLocaleTimeString(undefined, { hour12: false })}.{String(p.time % 1000).padStart(3, "0")}</span>
-                  <span className="hidden sm:block">{p.side.toUpperCase()}</span>
-                  <span className="text-right">{p.price.toFixed(2)}</span>
-                  <span className="text-right">{q.toFixed(step >= 1 ? 0 : step ? 1 : 4)}</span>
-                  <span className="text-right">${Math.round(q * p.price).toLocaleString()}</span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Column({ title, range, prints, step, tiers }: { title: string; range: string; prints: Print[]; step: number; tiers: Tier[] }) {
+  let buy = 0, sell = 0;
+  for (const p of prints) p.side === "buy" ? (buy += p.qty) : (sell += p.qty);
+  const delta = buy - sell;
+  return (
+    <div className="border border-border bg-card">
+      <div className="border-b border-border px-3 py-2">
+        <div className="flex items-baseline justify-between">
+          <span className="font-display text-sm font-semibold">{title}</span>
+          <span className="text-[10px] text-muted-foreground">{range}</span>
+        </div>
+        <div className="mt-1 flex justify-between tabular-nums text-[11px]">
+          <span>{prints.length} prints</span>
+          <span>Vol {(buy + sell).toFixed(1)}</span>
+          <span className={delta >= 0 ? "text-up" : "text-down"}>Δ {delta.toFixed(2)}</span>
+        </div>
+      </div>
+      <div className="grid grid-cols-[70px_1fr_1fr] gap-2 border-b border-border px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+        <span>Time</span><span className="text-right">Price</span><span className="text-right">BTC</span>
+      </div>
+      <div className="h-[calc(100vh-220px)] min-h-[420px] overflow-y-auto">
+        {prints.length === 0 && <div className="p-4 text-center text-muted-foreground">Waiting for orders…</div>}
+        {prints.slice(0, MAX).map((p) => {
+          const q = roundQty(p.qty, step);
+          const t = tierFor(q, tiers);
+          return (
+            <div key={p.id} className="grid grid-cols-[70px_1fr_1fr] gap-2 border-b border-border/40 px-3 py-0.5 tabular-nums"
+              style={{ color: t.color, backgroundColor: `${t.color}14`, borderLeft: `3px solid ${p.side === "buy" ? "var(--up)" : "var(--down)"}` }}>
+              <span className="text-muted-foreground">{new Date(p.time).toLocaleTimeString(undefined, { hour12: false })}</span>
+              <span className="text-right">{p.price.toFixed(1)}</span>
+              <span className="text-right">{q.toFixed(step >= 1 ? 0 : step ? 1 : 3)}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

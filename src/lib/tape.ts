@@ -27,3 +27,9 @@ export function tierFor(qty: number, tiers: Tier[]): Tier {
 export function filterPrints(prints: Print[], minBtc: number, step: number): Print[] {
   return prints.filter((p) => roundQty(p.qty, step) >= minBtc);
 }
+
+export type Cohort = "retail" | "whale" | "institutional";
+/** Retail < 1 BTC, Whale 1–10 BTC, Institutional ≥ 10 BTC. */
+export function cohortFor(qty: number): Cohort {
+  return qty >= 10 ? "institutional" : qty >= 1 ? "whale" : "retail";
+}
