@@ -20,7 +20,6 @@ export const Route = createFileRoute("/tape")({
 
 const MAX = 400;
 const STEPS = [0, 0.1, 0.5, 1, 5, 10];
-const MINS = [0, 0.5, 1, 5, 20];
 
 function useTape() {
   const [prints, setPrints] = useState<Print[]>([]);
@@ -54,7 +53,6 @@ function useTape() {
 function TapePage() {
   const { prints, live, paused } = useTape();
   const [step, setStep] = useState(0.1);
-  const [minBtc, setMinBtc] = useState(0.5);
   const [tiers, setTiers] = useState<Tier[]>(DEFAULT_TIERS);
   const [isPaused, setPaused] = useState(false);
 
@@ -86,14 +84,10 @@ function TapePage() {
         </div>
       </header>
 
-      <div className="grid gap-2 lg:grid-cols-[320px_1fr]">
+      <div className="grid gap-2 xl:grid-cols-[280px_1fr]">
         <aside className="flex flex-col gap-3 border border-border bg-card p-3">
           <Section title="Round size to">
             <Pills value={step} options={STEPS} fmt={(s) => (s ? `${s} BTC` : "Raw")} onChange={setStep} />
-          </Section>
-          <Section title="Minimum size">
-            <Pills value={minBtc} options={MINS} fmt={(s) => (s ? `≥ ${s}` : "All")} onChange={setMinBtc} />
-          </Section>
           <Section title="Color tiers (BTC ≥)">
             {tiers.map((t, i) => (
               <div key={i} className="flex items-center gap-2">
