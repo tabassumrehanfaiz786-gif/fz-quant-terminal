@@ -30,3 +30,20 @@ describe("iceberg detector", () => {
     expect(s.found[0]?.outcome).toBe("broken");
   });
 });
+
+import { describe as d2, it as i2, expect as e2 } from "vitest";
+import { createIcebergState as cs, onQuote as oq, onTrade as ot, activeIcebergs as ai } from "./iceberg";
+d2("iceberg false positives", () => {
+  i2("does not flag a busy level where new visible orders keep arriving", () => {
+    const s = cs(); const cfg = { minBtc: 5, ratio: 3 };
+    oq(s, "bid", 70000, 2, 0, cfg);
+    for (let k = 0; k < 10; k++) { ot(s, 70000, 2, true, k); oq(s, "bid", 70000, 0, k, cfg); oq(s, "bid", 70000, 2, k, cfg); }
+    e2(ai(s, cfg)).toHaveLength(0);
+  });
+  i2("flags fills that never show up in the book", () => {
+    const s = cs(); const cfg = { minBtc: 5, ratio: 3 };
+    oq(s, "bid", 70000, 2, 0, cfg);
+    for (let k = 0; k < 10; k++) { ot(s, 70000, 2, true, k); oq(s, "bid", 70000, 2, k, cfg); }
+    e2(ai(s, cfg)).toHaveLength(1);
+  });
+});

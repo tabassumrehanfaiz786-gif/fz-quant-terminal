@@ -29,8 +29,12 @@ function close(s: IcebergState, side: Side, newPrice: number, cfg: IcebergConfig
 export function onQuote(s: IcebergState, side: Side, price: number, qty: number, time: number, cfg: IcebergConfig) {
   const t = s[side];
   if (t && t.price === price) {
-    if (qty > t.shown) t.refills++;
-    t.shown = qty; t.visible = Math.max(t.visible, qty); t.last = time;
+    // Any growth in displayed size counts as visible supply (new limit orders
+    // or a visible reload), so only volume that executes without ever being
+    // shown is treated as hidden. This removes false positives from busy
+    // levels where many traders keep adding normal orders.
+    if (qty > t.shown) { t.refills++; t.visible += qty - t.shown; }
+    t.shown = qty; t.last = time;
     return;
   }
   close(s, side, price, cfg);
