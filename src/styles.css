@@ -55,6 +55,9 @@
   --color-down: var(--down);
   --color-liquidity: var(--liquidity);
   --color-wall: var(--wall);
+  --color-bookmap-cyan: var(--bookmap-cyan);
+  --color-bookmap-gold: var(--bookmap-gold);
+  --color-bookmap-surface: var(--bookmap-surface);
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --font-display: "Space Grotesk", sans-serif;
   --color-sidebar: var(--sidebar);
@@ -113,7 +116,23 @@
   --heat-5: oklch(0.72 0.18 156);
   --heat-6: oklch(0.86 0.18 150);
   --heat-7: oklch(0.94 0.10 145);
+  --bookmap-cyan: oklch(0.78 0.15 225);
+  --bookmap-gold: oklch(0.82 0.16 85);
+  --bookmap-surface: oklch(0.19 0.026 205);
+  --bookmap-heat-1: oklch(0.24 0.055 220);
+  --bookmap-heat-2: oklch(0.40 0.09 220);
+  --bookmap-heat-3: oklch(0.57 0.13 220);
+  --bookmap-heat-4: oklch(0.74 0.14 205);
+  --bookmap-heat-5: oklch(0.86 0.16 90);
+  --bookmap-heat-6: oklch(0.73 0.18 55);
+  --bookmap-heat-7: oklch(0.64 0.24 25);
+  --bookmap-frame-shadow: 0 0 12px oklch(0.78 0.15 225 / 0.12);
 }
+
+.bookmap-shell { border: 1px solid var(--bookmap-cyan); box-shadow: var(--bookmap-frame-shadow); }
+.bookmap-panel { border: 1px solid var(--bookmap-gold); background: var(--bookmap-surface); }
+.bookmap-label { border: 2px solid var(--bookmap-gold); background: var(--bookmap-cyan); color: var(--background); clip-path: polygon(0 0, 100% 0, 91% 100%, 0 100%); }
+.bookmap-spectrum { background: linear-gradient(90deg, var(--bookmap-heat-1), var(--bookmap-heat-3), var(--bookmap-heat-5), var(--bookmap-heat-6), var(--bookmap-heat-7)); }
 
 .liquidity-spectrum {
   background: linear-gradient(90deg, var(--heat-1), var(--heat-3), var(--heat-5), var(--heat-7));
