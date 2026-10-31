@@ -13,3 +13,8 @@
 - [x] Enable live entry, partial-exit, and closing alerts with sound control.
 - [x] Verify replay-safe alerts and sync lifecycle tests, desktop/mobile controls, and a real AI response (18 tests pass).
 - [ ] Verify saving trades and reading back a personalized report while signed in — blocked until the first account signs up.
+
+# Dual live Bookmap
+- [ ] Build synchronized Spot/Perpetual depth, executions, CVD, and liquidations with bounded histories.
+- [ ] Match the reference layout and macro price range with honest depth coverage indicators.
+- [ ] Test market calculations and verify live desktop/mobile controls.

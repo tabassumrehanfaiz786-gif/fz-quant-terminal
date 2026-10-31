@@ -16,3 +16,4 @@
 - The top trade summary reads the selected engine only; never invent a position or present replay results as persisted execution records.
 - The AI coach analyzes authenticated saved paper simulations on demand and never changes strategy parameters; reports disclose replay data and retain user risk constraints.
 - Trade alerts baseline the audit after history is ready and track event identity, while cloud sync serializes batches per engine/account to survive resets without overlapping saves.
+- Dual Bookmap uses independent browser-only synchronized Spot and USD-M depth streams; pure bookmap helpers enforce futures sequence continuity and keep observed depth, executions, and liquidation histories bounded without affecting strategy decisions.

@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BookmapRouteImport } from './routes/bookmap'
 import { Route as IcebergsRouteImport } from './routes/icebergs'
 import { Route as TapeRouteImport } from './routes/tape'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookmapRoute = BookmapRouteImport.update({
+  id: '/bookmap',
+  path: '/bookmap',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IcebergsRoute = IcebergsRouteImport.update({
@@ -31,30 +37,34 @@ const TapeRoute = TapeRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/bookmap': typeof BookmapRoute
   '/icebergs': typeof IcebergsRoute
   '/tape': typeof TapeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/bookmap': typeof BookmapRoute
   '/icebergs': typeof IcebergsRoute
   '/tape': typeof TapeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/bookmap': typeof BookmapRoute
   '/icebergs': typeof IcebergsRoute
   '/tape': typeof TapeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/icebergs' | '/tape'
+  fullPaths: '/' | '/bookmap' | '/icebergs' | '/tape'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/icebergs' | '/tape'
-  id: '__root__' | '/' | '/icebergs' | '/tape'
+  to: '/' | '/bookmap' | '/icebergs' | '/tape'
+  id: '__root__' | '/' | '/bookmap' | '/icebergs' | '/tape'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BookmapRoute: typeof BookmapRoute
   IcebergsRoute: typeof IcebergsRoute
   TapeRoute: typeof TapeRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bookmap': {
+      id: '/bookmap'
+      path: '/bookmap'
+      fullPath: '/bookmap'
+      preLoaderRoute: typeof BookmapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/icebergs': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BookmapRoute: BookmapRoute,
   IcebergsRoute: IcebergsRoute,
   TapeRoute: TapeRoute,
 }
