@@ -17,3 +17,4 @@
 - The AI coach analyzes authenticated saved paper simulations on demand and never changes strategy parameters; reports disclose replay data and retain user risk constraints.
 - Trade alerts baseline the audit after history is ready and track event identity, while cloud sync serializes batches per engine/account to survive resets without overlapping saves.
 - Dual Bookmap uses independent browser-only synchronized Spot and USD-M depth streams; pure bookmap helpers enforce futures sequence continuity and keep observed depth, executions, and liquidation histories bounded without affecting strategy decisions.
+- Iceberg visualization uses bounded observed session samples and the existing pure detector; display helpers deduplicate heavy-absorption alerts, and all hidden-order levels remain estimates rather than participant identification.
