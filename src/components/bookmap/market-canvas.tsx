@@ -69,9 +69,10 @@ export function MarketCanvas({ data, macro, minutes, bubbleMin }: { data: Market
     const bins = data.book ? binDepth(data.book, step, min, max) : new Map<number, number>();
     const maximum = Math.max(1, ...bins.values());
     ctx.fillStyle = color('--card'); ctx.fillRect(left + plotW, top, domW, plotH);
-    const labelStep = macro ? 1000 : 100;
+    const baseStep = macro ? 1000 : 100;
+    const labelStep = baseStep * Math.max(1, Math.ceil(12 / (baseStep / (max - min) * plotH)));
     ctx.textAlign = 'left';
-    for (let p = max; p >= min; p -= labelStep) {
+    for (let p = max; data.price > 0 && p >= min; p -= labelStep) {
       const yy = y(p);
       if (yy > top + plotH - 5 || (data.price && Math.abs(yy - y(data.price)) < 13)) continue;
       const qty = bins.get(Math.floor(p / step) * step);
