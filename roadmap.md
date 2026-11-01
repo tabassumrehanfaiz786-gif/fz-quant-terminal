@@ -18,3 +18,8 @@
 - [ ] Build synchronized Spot/Perpetual depth, executions, CVD, and liquidations with bounded histories.
 - [ ] Match the reference layout and macro price range with honest depth coverage indicators.
 - [ ] Test market calculations and verify live desktop/mobile controls.
+
+# Iceberg absorption visualizer
+- [ ] Add live bid/ask absorption meters and moving price chart with horizontal estimated iceberg levels.
+- [ ] Preserve detector filters and session log; add opt-in deduplicated heavy-absorption sound.
+- [ ] Run detector and display-logic tests and verify live desktop/mobile views.
