@@ -8,7 +8,7 @@ export function useBookmap(market: Market) {
   useEffect(() => {
     const s = emptyMarket(market); state.current = s;
     let stopped = false, generation = 0, attempt = 0, bridged = false;
-    let ws: WebSocket | undefined, retry: ReturnType<typeof setTimeout> | undefined;
+    let ws: WebSocket | undefined, ws2: WebSocket | undefined, retry: ReturnType<typeof setTimeout> | undefined;
     let watchdog: ReturnType<typeof setTimeout> | undefined, abort: AbortController | undefined;
     let buy = 0, sell = 0, lastTradeId = -1;
     const publish = () => { if (!stopped) setData({ ...s, frames: [...s.frames], tape: [...s.tape], executions: [...s.executions], liquidations: [...s.liquidations], volumes: s.volumes.map(b => ({ ...b })), tick: Date.now() }); };
@@ -18,12 +18,14 @@ export function useBookmap(market: Market) {
       s.book = null; bridged = false; s.lastDepth = 0; s.status = attempt ? 'reconnecting' : 'connecting'; publish();
       const buffer: (DepthEvent & { pu?: number })[] = [];
       const alternate = attempt % 2 === 1;
-      const url = market === 'spot' ? `${alternate ? 'wss://stream.binance.com:9443' : 'wss://data-stream.binance.vision'}/stream?streams=btcusdt@depth@100ms/btcusdt@aggTrade` : 'wss://fstream.binance.com/stream?streams=btcusdt@depth@100ms/btcusdt@aggTrade/btcusdt@forceOrder';
+      const url = market === 'spot' ? `${alternate ? 'wss://stream.binance.com:9443' : 'wss://data-stream.binance.vision'}/stream?streams=btcusdt@depth@100ms/btcusdt@aggTrade` : 'wss://fstream.binance.com/stream?streams=btcusdt@depth@100ms';
       const socket = new WebSocket(url); ws = socket;
+      // Binance now serves futures trades/liquidations on the /market route, separate from depth.
+      const trades = market === 'perps' ? new WebSocket('wss://fstream.binance.com/market/stream?streams=btcusdt@aggTrade/btcusdt@forceOrder') : undefined; ws2 = trades;
       const alive = () => !stopped && g === generation;
       const fail = () => {
         if (!alive()) return;
-        generation++; abort?.abort(); clearTimeout(watchdog); socket.close();
+        generation++; abort?.abort(); clearTimeout(watchdog); socket.close(); trades?.close();
         s.book = null; bridged = false; s.status = 'reconnecting'; publish();
         retry = setTimeout(connect, Math.min(30_000, 2000 * 2 ** Math.min(attempt++, 4)));
       };
@@ -79,6 +81,7 @@ export function useBookmap(market: Market) {
         } catch { fail(); }
       };
       socket.onclose = fail; socket.onerror = fail;
+      if (trades) { trades.onmessage = socket.onmessage; trades.onclose = fail; trades.onerror = fail; }
     };
     connect();
     const timer = setInterval(() => {
@@ -92,7 +95,7 @@ export function useBookmap(market: Market) {
       s.liquidations = s.liquidations.filter(t => t.time >= now - 24 * 3600_000);
       publish();
     }, 1000);
-    return () => { stopped = true; generation++; clearInterval(timer); clearTimeout(retry); clearTimeout(watchdog); abort?.abort(); ws?.close(); };
+    return () => { stopped = true; generation++; clearInterval(timer); clearTimeout(retry); clearTimeout(watchdog); abort?.abort(); ws?.close(); ws2?.close(); };
   }, [market]);
   return data;
 }
