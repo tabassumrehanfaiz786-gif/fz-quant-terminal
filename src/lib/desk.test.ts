@@ -26,4 +26,11 @@ describe("desk", () => {
   it("radar score is clip share of top depth", () => {
     expect(radarScore(1, 4)).toBe(25);
   });
+  it("radar tiers: stealth <20%, borderline 20–50%, detected >50%", () => {
+    expect(radarTier(19)).toBe("stealth");
+    expect(radarTier(20)).toBe("borderline");
+    expect(radarTier(50)).toBe("borderline");
+    expect(radarTier(51)).toBe("detected");
+    expect(radarTier(30, 35)).toBe("stealth");
+  });
 });

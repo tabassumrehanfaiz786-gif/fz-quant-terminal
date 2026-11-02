@@ -2,7 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LIS_NOTIONAL, isLargeInScale, radarScore, rfqQuote, sliceOrder, sweep, type Lvl, type Side } from "@/lib/desk";
+import { LIS_NOTIONAL, isLargeInScale, radarScore, radarTier, rfqQuote, sliceOrder, sweep, type Lvl, type RadarTier, type Side } from "@/lib/desk";
+
+const TIER: Record<RadarTier, { label: string; bar: string; badge: string; text: string }> = {
+  stealth: { label: "Stealth", bar: "bg-primary", badge: "bg-primary/15 text-primary", text: "Undetected — blends into normal flow." },
+  borderline: { label: "Borderline", bar: "bg-accent", badge: "bg-accent/20 text-accent-foreground", text: "Moderate footprint — may trigger order-book alerts." },
+  detected: { label: "Detected", bar: "bg-destructive", badge: "bg-destructive/15 text-destructive", text: "High footprint — iceberg detectors will spot it." },
+};
 
 export const Route = createFileRoute("/desk")({
   head: () => ({
@@ -56,6 +62,9 @@ function DeskPage() {
   const notional = qty * mid;
   const lis = isLargeInScale(notional);
   const radar = radarScore(clip, levels[0]?.[1] ?? 0);
+  const [stealthMax, setStealthMax] = useState(20);
+  const [detectedMin, setDetectedMin] = useState(50);
+  const tier = radarTier(radar, stealthMax, detectedMin);
   const sweepCost = sw.avg * sw.filled;
   const rfqCost = rfq ? rfq.price * qty : 0;
   const saved = side === "buy" ? sweepCost - (rfq?.price ?? 0) * sw.filled : (rfq?.price ?? 0) * sw.filled - sweepCost;
@@ -122,11 +131,22 @@ function DeskPage() {
         </section>
 
         <section className="space-y-2 rounded border border-border bg-card p-3 text-xs">
-          <h2 className="text-sm font-semibold">Radar evasion</h2>
-          <div className="h-3 w-full overflow-hidden rounded bg-muted">
-            <div className={cn("h-full", radar > 50 ? "bg-destructive" : "bg-primary")} style={{ width: `${radar}%` }} />
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Radar evasion</h2>
+            <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-bold uppercase", TIER[tier].badge)}>{TIER[tier].label}</span>
           </div>
-          <p className="text-muted-foreground">Clip is {radar}% of top-of-book depth. {radar > 50 ? "Likely visible to tape readers." : "Blends into normal flow."}</p>
+          <div className="relative h-3 w-full overflow-hidden rounded bg-muted">
+            <div className={cn("h-full", TIER[tier].bar)} style={{ width: `${100 - radar}%` }} />
+            <div className="absolute inset-y-0 w-px bg-foreground/60" style={{ left: `${100 - detectedMin}%` }} />
+            <div className="absolute inset-y-0 w-px bg-foreground/60" style={{ left: `${100 - stealthMax}%` }} />
+          </div>
+          <p className="text-muted-foreground">Evasion {100 - radar}% · clip is {radar}% of top-of-book depth. {TIER[tier].text}</p>
+          <label className="block text-muted-foreground">Stealth limit: clip under {stealthMax}% of book
+            <input type="range" min={5} max={detectedMin - 5} value={stealthMax} onChange={(e) => setStealthMax(+e.target.value)} className="w-full accent-primary" />
+          </label>
+          <label className="block text-muted-foreground">Detected above: {detectedMin}% of book
+            <input type="range" min={stealthMax + 5} max={100} value={detectedMin} onChange={(e) => setDetectedMin(+e.target.value)} className="w-full accent-primary" />
+          </label>
           <h3 className="pt-2 font-semibold">Child fills</h3>
           <ol className="max-h-64 space-y-0.5 overflow-auto">
             {run?.fills.map((p, i) => (

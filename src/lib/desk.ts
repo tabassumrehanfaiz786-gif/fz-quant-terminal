@@ -45,3 +45,11 @@ export function radarScore(clip: number, topDepth: number) {
   if (topDepth <= 0) return 100;
   return Math.min(100, Math.round((clip / topDepth) * 100));
 }
+
+export type RadarTier = "stealth" | "borderline" | "detected";
+/** Classify exposure: below stealthMax = stealth, above detectedMin = detected. */
+export function radarTier(exposure: number, stealthMax = 20, detectedMin = 50): RadarTier {
+  if (exposure < stealthMax) return "stealth";
+  if (exposure > detectedMin) return "detected";
+  return "borderline";
+}
