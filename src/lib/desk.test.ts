@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isLargeInScale, radarScore, rfqQuote, sliceOrder, sweep } from "./desk";
+import { isLargeInScale, radarScore, radarTier, rfqQuote, sliceOrder, sweep } from "./desk";
 
 describe("desk", () => {
   it("sweeps through levels and reports slippage", () => {
