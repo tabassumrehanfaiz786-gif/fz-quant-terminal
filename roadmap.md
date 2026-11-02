@@ -23,3 +23,5 @@
 - [ ] Add live bid/ask absorption meters and moving price chart with horizontal estimated iceberg levels.
 - [ ] Preserve detector filters and session log; add opt-in deduplicated heavy-absorption sound.
 - [ ] Run detector and display-logic tests and verify live desktop/mobile views.
+# OTC & stealth desk
+- [x] Pure desk engine with tests, /desk page with sweep vs RFQ vs iceberg slicer and LIS card.
