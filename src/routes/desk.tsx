@@ -22,9 +22,9 @@ function useBook() {
   const [book, setBook] = useState<{ bids: Lvl[]; asks: Lvl[] }>({ bids: [], asks: [] });
   const [live, setLive] = useState(false);
   useEffect(() => {
-    let ws: WebSocket | null = null, stop = false, t: ReturnType<typeof setTimeout>;
+    let ws: WebSocket | null = null, stop = false, n = 0, t: ReturnType<typeof setTimeout>;
     const connect = () => {
-      ws = new WebSocket("wss://data-stream.binance.vision/ws/btcusdt@depth20@500ms");
+      ws = new WebSocket(`${n++ % 2 ? "wss://stream.binance.com:9443" : "wss://data-stream.binance.vision"}/ws/btcusdt@depth20@100ms`);
       ws.onopen = () => setLive(true);
       ws.onmessage = (e) => {
         const d = JSON.parse(e.data);
