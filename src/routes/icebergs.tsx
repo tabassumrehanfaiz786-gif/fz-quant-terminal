@@ -90,6 +90,7 @@ function IcebergPage() {
           <Button size="sm" variant="outline" className="h-7 w-7 p-0" title={sound ? "Mute absorption alerts" : "Enable absorption alerts"} aria-label={sound ? "Mute absorption alerts" : "Enable absorption alerts"} aria-pressed={sound} onClick={() => setSound(!sound)}>{sound ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}</Button>
           <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to="/">Dashboard</Link></Button>
           <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to="/tape">Tape</Link></Button>
+          <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to="/desk">OTC Desk</Link></Button>
         </div>
       </header>
 
