@@ -79,7 +79,7 @@ function TapePage() {
         <div className="ml-auto flex gap-2">
           <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to="/">Dashboard</Link></Button>
           <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to="/icebergs">Icebergs</Link></Button>
-          <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to="/bookmap">Bookmap</Link></Button>
+          <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to="/bookmap">Bookmap</Link></Button><Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to="/desk">OTC Desk</Link></Button>
           <Button size="sm" variant={isPaused ? "default" : "outline"} className="h-7 text-[11px]" onClick={() => { paused.current = !isPaused; setPaused(!isPaused); }}>{isPaused ? "Resume" : "Pause"}</Button>
         </div>
       </header>
