@@ -28,7 +28,7 @@ function useBook() {
       ws.onopen = () => setLive(true);
       ws.onmessage = (e) => {
         const d = JSON.parse(e.data);
-        const m = (l: string[][]): Lvl[] => l.map(([p, q]) => [+p, +q]);
+        const m = (l: [string, string][]): Lvl[] => l.map(([p, q]) => [+p, +q]);
         setBook({ bids: m(d.bids), asks: m(d.asks) });
       };
       ws.onclose = () => { setLive(false); if (!stop) t = setTimeout(connect, 2000); };
@@ -47,7 +47,7 @@ function DeskPage() {
   const [qty, setQty] = useState(25);
   const [clip, setClip] = useState(0.5);
   const [run, setRun] = useState<{ clips: number[]; done: number; fills: number[] } | null>(null);
-  const timer = useRef<ReturnType<typeof setInterval>>();
+  const timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   const mid = bids[0] && asks[0] ? (bids[0][0] + asks[0][0]) / 2 : 0;
   const levels = side === "buy" ? asks : bids;
