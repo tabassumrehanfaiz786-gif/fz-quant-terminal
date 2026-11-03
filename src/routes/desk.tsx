@@ -27,22 +27,30 @@ export const Route = createFileRoute("/desk")({
 function useBook() {
   const [book, setBook] = useState<{ bids: Lvl[]; asks: Lvl[] }>({ bids: [], asks: [] });
   const [live, setLive] = useState(false);
+  const [tapeRate, setTapeRate] = useState(0); // BTC per second, rolling 30s
   useEffect(() => {
     let ws: WebSocket | null = null, stop = false, n = 0, t: ReturnType<typeof setTimeout>;
+    const trades: [number, number][] = [];
+    const tick = setInterval(() => {
+      const cut = Date.now() - 30_000;
+      while (trades.length && trades[0]![0] < cut) trades.shift();
+      setTapeRate(trades.reduce((s, [, q]) => s + q, 0) / 30);
+    }, 1000);
     const connect = () => {
-      ws = new WebSocket(`${n++ % 2 ? "wss://stream.binance.com:9443" : "wss://data-stream.binance.vision"}/ws/btcusdt@depth20@100ms`);
+      ws = new WebSocket(`${n++ % 2 ? "wss://stream.binance.com:9443" : "wss://data-stream.binance.vision"}/stream?streams=btcusdt@depth20@100ms/btcusdt@aggTrade`);
       ws.onopen = () => setLive(true);
       ws.onmessage = (e) => {
-        const d = JSON.parse(e.data);
+        const { stream, data: d } = JSON.parse(e.data);
+        if (stream?.endsWith("aggTrade")) { trades.push([Date.now(), +d.q]); return; }
         const m = (l: [string, string][]): Lvl[] => l.map(([p, q]) => [+p, +q]);
         setBook({ bids: m(d.bids), asks: m(d.asks) });
       };
       ws.onclose = () => { setLive(false); if (!stop) t = setTimeout(connect, 2000); };
     };
     connect();
-    return () => { stop = true; clearTimeout(t); ws?.close(); };
+    return () => { stop = true; clearTimeout(t); clearInterval(tick); ws?.close(); };
   }, []);
-  return { ...book, live };
+  return { ...book, live, tapeRate };
 }
 
 const usd = (n: number) => "$" + n.toLocaleString(undefined, { maximumFractionDigits: 2 });
