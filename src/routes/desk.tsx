@@ -56,12 +56,12 @@ function useBook() {
 const usd = (n: number) => "$" + n.toLocaleString(undefined, { maximumFractionDigits: 2 });
 
 function DeskPage() {
-  const { bids, asks, live } = useBook();
+  const { bids, asks, live, tapeRate } = useBook();
   const [side, setSide] = useState<Side>("buy");
   const [qty, setQty] = useState(25);
   const [clip, setClip] = useState(0.5);
-  const [run, setRun] = useState<{ clips: number[]; done: number; fills: number[] } | null>(null);
-  const timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const [run, setRun] = useState<{ clips: number[]; gaps: number[]; done: number; fills: number[] } | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const mid = bids[0] && asks[0] ? (bids[0][0] + asks[0][0]) / 2 : 0;
   const levels = side === "buy" ? asks : bids;
@@ -73,7 +73,8 @@ function DeskPage() {
   const [stealthMax, setStealthMax] = useState(20);
   const [detectedMin, setDetectedMin] = useState(50);
   const previewClips = useMemo(() => run?.clips ?? sliceOrder(Math.min(qty, clip * 40), clip, 7), [run, qty, clip]);
-  const mv = multiVectorStealth(clip, levels, previewClips, stealthMax, detectedMin);
+  const previewGaps = useMemo(() => run?.gaps ?? sliceIntervals(previewClips.length, 400, 18), [run, previewClips]);
+  const mv = multiVectorStealth(clip, levels, previewClips, { intervalsMs: previewGaps, tapeBtcPerSec: tapeRate, stealthMax, detectedMin });
   const tier = mv.tier;
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const makeTicket = () => rfq && setTicket(complianceTicket({ side, qty, mid, sweepAvg: sw.avg, sweepFilled: sw.filled, rfqPrice: rfq.price, rfqBps: rfq.bps, stealth: mv.composite, time: new Date() }));
@@ -88,18 +89,20 @@ function DeskPage() {
 
   const levelsRef = useRef(levels); levelsRef.current = levels;
   const start = () => {
-    clearInterval(timer.current);
-    const clips = sliceOrder(qty, clip, Date.now() % 1000);
-    setRun({ clips, done: 0, fills: [] });
-    timer.current = setInterval(() => {
-      setRun((r) => {
-        if (!r || r.done >= r.clips.length) { clearInterval(timer.current); return r; }
-        const px = levelsRef.current[0]?.[0] ?? 0;
-        return { ...r, done: r.done + 1, fills: [...r.fills, px] };
-      });
-    }, 400);
+    clearTimeout(timer.current);
+    const seed = Date.now() % 1000;
+    const clips = sliceOrder(qty, clip, seed);
+    const gaps = sliceIntervals(clips.length, 400, seed + 11);
+    setRun({ clips, gaps, done: 0, fills: [] });
+    let i = 0;
+    const step = () => {
+      const px = levelsRef.current[0]?.[0] ?? 0;
+      setRun((r) => (r ? { ...r, done: r.done + 1, fills: [...r.fills, px] } : r));
+      if (++i < clips.length) timer.current = setTimeout(step, gaps[i]);
+    };
+    timer.current = setTimeout(step, gaps[0]);
   };
-  useEffect(() => () => clearInterval(timer.current), []);
+  useEffect(() => () => clearTimeout(timer.current), []);
   const sliceAvg = run && run.done ? run.fills.reduce((s, p, i) => s + p * run.clips[i]!, 0) / run.clips.slice(0, run.done).reduce((a, b) => a + b, 0) : 0;
 
   return (
