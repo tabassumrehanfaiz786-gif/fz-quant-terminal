@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LIS_NOTIONAL, complianceTicket, isLargeInScale, multiVectorStealth, ticketText, type Ticket, radarScore, radarTier, rfqQuote, sliceOrder, sweep, type Lvl, type RadarTier, type Side } from "@/lib/desk";
+import { LIS_NOTIONAL, complianceTicket, isLargeInScale, multiVectorStealth, ticketText, type Ticket, radarScore, rfqQuote, sliceOrder, sweep, type Lvl, type RadarTier, type Side } from "@/lib/desk";
 
 const TIER: Record<RadarTier, { label: string; bar: string; badge: string; text: string }> = {
   stealth: { label: "Stealth", bar: "bg-primary", badge: "bg-primary/15 text-primary", text: "Undetected — blends into normal flow." },
