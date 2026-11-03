@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LIS_NOTIONAL, isLargeInScale, radarScore, radarTier, rfqQuote, sliceOrder, sweep, type Lvl, type RadarTier, type Side } from "@/lib/desk";
+import { LIS_NOTIONAL, complianceTicket, isLargeInScale, multiVectorStealth, ticketText, type Ticket, radarScore, radarTier, rfqQuote, sliceOrder, sweep, type Lvl, type RadarTier, type Side } from "@/lib/desk";
 
 const TIER: Record<RadarTier, { label: string; bar: string; badge: string; text: string }> = {
   stealth: { label: "Stealth", bar: "bg-primary", badge: "bg-primary/15 text-primary", text: "Undetected — blends into normal flow." },
@@ -64,7 +64,16 @@ function DeskPage() {
   const radar = radarScore(clip, levels[0]?.[1] ?? 0);
   const [stealthMax, setStealthMax] = useState(20);
   const [detectedMin, setDetectedMin] = useState(50);
-  const tier = radarTier(radar, stealthMax, detectedMin);
+  const previewClips = useMemo(() => run?.clips ?? sliceOrder(Math.min(qty, clip * 40), clip, 7), [run, qty, clip]);
+  const mv = multiVectorStealth(clip, levels, previewClips, stealthMax, detectedMin);
+  const tier = mv.tier;
+  const [ticket, setTicket] = useState<Ticket | null>(null);
+  const makeTicket = () => rfq && setTicket(complianceTicket({ side, qty, mid, sweepAvg: sw.avg, sweepFilled: sw.filled, rfqPrice: rfq.price, rfqBps: rfq.bps, stealth: mv.composite, time: new Date() }));
+  const download = (kind: "txt" | "json") => {
+    if (!ticket) return;
+    const blob = new Blob([kind === "txt" ? ticketText(ticket) : JSON.stringify(ticket, null, 2)], { type: kind === "txt" ? "text/plain" : "application/json" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${ticket.id}.${kind}`; a.click(); URL.revokeObjectURL(a.href);
+  };
   const sweepCost = sw.avg * sw.filled;
   const rfqCost = rfq ? rfq.price * qty : 0;
   const saved = side === "buy" ? sweepCost - (rfq?.price ?? 0) * sw.filled : (rfq?.price ?? 0) * sw.filled - sweepCost;
@@ -128,6 +137,7 @@ function DeskPage() {
             RFQ vs sweep on filled size: {saved > 0 ? `saves ${usd(saved)}` : `costs ${usd(-saved)} more`}
           </div>
           <Button size="sm" className="w-full" onClick={start} disabled={!mid}>Start iceberg slicer</Button>
+          <Button size="sm" variant="outline" className="w-full" onClick={makeTicket} disabled={!rfq}>Generate compliance ticket</Button>
         </section>
 
         <section className="space-y-2 rounded border border-border bg-card p-3 text-xs">
@@ -136,11 +146,18 @@ function DeskPage() {
             <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-bold uppercase", TIER[tier].badge)}>{TIER[tier].label}</span>
           </div>
           <div className="relative h-3 w-full overflow-hidden rounded bg-muted">
-            <div className={cn("h-full", TIER[tier].bar)} style={{ width: `${100 - radar}%` }} />
+            <div className={cn("h-full", TIER[tier].bar)} style={{ width: `${mv.composite}%` }} />
             <div className="absolute inset-y-0 w-px bg-foreground/60" style={{ left: `${100 - detectedMin}%` }} />
             <div className="absolute inset-y-0 w-px bg-foreground/60" style={{ left: `${100 - stealthMax}%` }} />
           </div>
-          <p className="text-muted-foreground">Evasion {100 - radar}% · clip is {radar}% of top-of-book depth. {TIER[tier].text}</p>
+          <p className="text-muted-foreground">Composite stealth {mv.composite}/100. {TIER[tier].text}</p>
+          {([["Top-of-book depth", mv.top, "40%"], ["5-level depth", mv.l5, "35%"], ["Clip-size randomness", mv.entropy, "25%"]] as const).map(([k, v, w]) => (
+            <div key={k}>
+              <div className="flex justify-between text-muted-foreground"><span>{k} <span className="opacity-60">· weight {w}</span></span><b className="text-foreground">{v}</b></div>
+              <div className="h-1.5 w-full overflow-hidden rounded bg-muted"><div className="h-full bg-primary" style={{ width: `${v}%` }} /></div>
+            </div>
+          ))}
+          <p className="text-[11px] text-muted-foreground">Single-ratio exposure (clip vs top level): {radar}%.</p>
           <label className="block text-muted-foreground">Stealth limit: clip under {stealthMax}% of book
             <input type="range" min={5} max={detectedMin - 5} value={stealthMax} onChange={(e) => setStealthMax(+e.target.value)} className="w-full accent-primary" />
           </label>
@@ -156,6 +173,20 @@ function DeskPage() {
           </ol>
         </section>
       </main>
+      {ticket && (
+        <section className="mx-3 mb-3 space-y-2 rounded border border-primary bg-card p-3 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-sm font-semibold">Compliance ticket {ticket.id}</h2>
+            <div className="ml-auto flex gap-1">
+              <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => navigator.clipboard?.writeText(ticketText(ticket))}>Copy</Button>
+              <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => download("txt")}>Download .txt</Button>
+              <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => download("json")}>Download .json</Button>
+              <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => setTicket(null)}>Close</Button>
+            </div>
+          </div>
+          <pre className="overflow-auto whitespace-pre-wrap rounded bg-muted p-2 text-[11px]">{ticketText(ticket)}</pre>
+        </section>
+      )}
     </div>
   );
 }
