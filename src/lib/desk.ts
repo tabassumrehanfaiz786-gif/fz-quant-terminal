@@ -65,14 +65,40 @@ export function sizeEntropy(clips: number[]) {
   return m ? Math.min(100, Math.round((sd / m / 0.3) * 100)) : 0;
 }
 
-export interface MultiVector { top: number; l5: number; entropy: number; composite: number; tier: RadarTier }
-/** Composite stealth: 40% top-of-book, 35% five-level depth, 25% clip-size randomness. */
-export function multiVectorStealth(clip: number, levels: Lvl[], clips: number[], stealthMax = 20, detectedMin = 50): MultiVector {
+/** Jittered child-order gaps in ms (deterministic via seed), 50%-150% of base. */
+export function sliceIntervals(n: number, baseMs: number, seed = 1) {
+  const out: number[] = [];
+  let s = seed;
+  for (let i = 0; i < n; i++) { s = (s * 9301 + 49297) % 233280; out.push(Math.round(baseMs * (0.5 + s / 233280))); }
+  return out;
+}
+
+/** Participation-of-volume score: your rate vs live tape rate. 0% POV = 100, 25%+ POV = 0. */
+export function povScore(clips: number[], intervalsMs: number[], tapeBtcPerSec: number) {
+  if (!clips.length || !intervalsMs.length || tapeBtcPerSec <= 0) return { pov: 0, score: 0 };
+  const avgClip = clips.reduce((a, b) => a + b, 0) / clips.length;
+  const avgGap = intervalsMs.reduce((a, b) => a + b, 0) / intervalsMs.length / 1000;
+  const rate = avgGap > 0 ? avgClip / avgGap : 0;
+  const pov = (rate / (rate + tapeBtcPerSec)) * 100;
+  return { pov: +pov.toFixed(1), score: Math.max(0, Math.round(100 - pov * 4)) };
+}
+
+export const VECTOR_WEIGHTS = { top: 0.25, l5: 0.25, size: 0.15, pov: 0.2, timing: 0.15 } as const;
+export interface MultiVector { top: number; l5: number; entropy: number; pov: number; povScore: number; timing: number; composite: number; tier: RadarTier }
+/** 5-vector composite stealth: top-of-book, 5-level depth, clip-size randomness, tape participation, timing jitter. */
+export function multiVectorStealth(
+  clip: number, levels: Lvl[], clips: number[],
+  opts: { intervalsMs?: number[]; tapeBtcPerSec?: number; stealthMax?: number; detectedMin?: number } = {},
+): MultiVector {
+  const { intervalsMs = [], tapeBtcPerSec = 0, stealthMax = 20, detectedMin = 50 } = opts;
   const top = Math.round(share(clip, levels[0]?.[1] ?? 0));
   const l5 = Math.round(share(clip, levels.slice(0, 5).reduce((s, [, q]) => s + q, 0)));
   const entropy = sizeEntropy(clips);
-  const composite = Math.round(top * 0.4 + l5 * 0.35 + entropy * 0.25);
-  return { top, l5, entropy, composite, tier: radarTier(100 - composite, stealthMax, detectedMin) };
+  const p = povScore(clips, intervalsMs, tapeBtcPerSec);
+  const timing = sizeEntropy(intervalsMs);
+  const w = VECTOR_WEIGHTS;
+  const composite = Math.round(top * w.top + l5 * w.l5 + entropy * w.size + p.score * w.pov + timing * w.timing);
+  return { top, l5, entropy, pov: p.pov, povScore: p.score, timing, composite, tier: radarTier(100 - composite, stealthMax, detectedMin) };
 }
 
 export interface TicketInput { side: Side; qty: number; mid: number; sweepAvg: number; sweepFilled: number; rfqPrice: number; rfqBps: number; stealth: number; time: Date }
