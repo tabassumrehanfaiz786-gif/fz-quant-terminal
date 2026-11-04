@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LIS_NOTIONAL, complianceTicket, isLargeInScale, multiVectorStealth, ticketText, type Ticket, radarScore, rfqQuote, sliceOrder, sweep, type Lvl, type RadarTier, type Side } from "@/lib/desk";
+import { LIS_NOTIONAL, complianceTicket, isLargeInScale, multiVectorStealth, ticketText, type Ticket, radarScore, rfqQuote, sliceIntervals, sliceOrder, sweep, type Lvl, type RadarTier, type Side } from "@/lib/desk";
 
 const TIER: Record<RadarTier, { label: string; bar: string; badge: string; text: string }> = {
   stealth: { label: "Stealth", bar: "bg-primary", badge: "bg-primary/15 text-primary", text: "Undetected — blends into normal flow." },
@@ -162,7 +162,7 @@ function DeskPage() {
             <div className="absolute inset-y-0 w-px bg-foreground/60" style={{ left: `${100 - stealthMax}%` }} />
           </div>
           <p className="text-muted-foreground">Composite stealth {mv.composite}/100. {TIER[tier].text}</p>
-          {([["Top-of-book depth", mv.top, "40%"], ["5-level depth", mv.l5, "35%"], ["Clip-size randomness", mv.entropy, "25%"]] as const).map(([k, v, w]) => (
+          {([["Top-of-book depth", mv.top, "25%"], ["5-level depth", mv.l5, "25%"], ["Clip-size randomness", mv.entropy, "15%"], [`Tape participation (POV ${mv.pov}%)`, mv.povScore, "20%"], ["Timing jitter", mv.timing, "15%"]] as const).map(([k, v, w]) => (
             <div key={k}>
               <div className="flex justify-between text-muted-foreground"><span>{k} <span className="opacity-60">· weight {w}</span></span><b className="text-foreground">{v}</b></div>
               <div className="h-1.5 w-full overflow-hidden rounded bg-muted"><div className="h-full bg-primary" style={{ width: `${v}%` }} /></div>
