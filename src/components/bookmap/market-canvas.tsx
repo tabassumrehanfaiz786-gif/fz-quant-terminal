@@ -61,6 +61,13 @@ export function MarketCanvas({ data, macro, minutes, bubbleMin }: { data: Market
       ctx.beginPath(); ctx.arc(x(t.time), y(t.price), bubbleRadius(t.qty), 0, Math.PI * 2); ctx.fill();
     }
     ctx.globalAlpha = 1;
+    // Observed forced liquidations (perpetual only): gold-outlined diamonds.
+    for (const l of data.liquidations) {
+      if (l.time < start || l.time > end || l.price < min || l.price > max) continue;
+      const lx = x(l.time), ly = y(l.price), r = Math.max(5, bubbleRadius(l.qty) + 2);
+      ctx.fillStyle = color(l.side === 'long' ? '--down' : '--up'); ctx.strokeStyle = color('--bookmap-gold'); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(lx, ly - r); ctx.lineTo(lx + r, ly); ctx.lineTo(lx, ly + r); ctx.lineTo(lx - r, ly); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
     if (data.price) {
       ctx.strokeStyle = color('--bookmap-cyan'); ctx.setLineDash([5, 3]); ctx.beginPath(); ctx.moveTo(left, y(data.price)); ctx.lineTo(left + plotW, y(data.price)); ctx.stroke(); ctx.setLineDash([]);
     }
