@@ -57,7 +57,7 @@ const PAIRS: [V, V][] = [["perp", "spot"], ["cb", "spot"], ["perp", "cb"]];
 
 function LeadLagPage() {
   const { hist, live } = useFeeds();
-  const [fee, setFee] = useState(1);
+  const [fee, setFee] = useState(7.5);
   const last = (v: V) => hist[v].at(-1) ?? 0;
   const ready = hist.spot.length > 30;
 
