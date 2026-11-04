@@ -73,7 +73,7 @@ function BookmapPage() {
             <div className="border-t border-border px-2 py-1.5 text-[9px] text-muted-foreground">Snapshot ≤ {d.market === 'spot' ? '5,000' : '1,000'} levels/side · blank depth = unknown{d.frames.length ? ` · ${d.frames.length}s captured` : ''}</div>
             <div className="border-t border-border px-2 py-1.5 text-[9px]">{d.market === 'spot'
               ? <span className="text-muted-foreground">Spot has no leverage, so there are no spot liquidations. Liquidations appear on the Perpetual panel.</span>
-              : <span><span className="text-bookmap-gold">◆ LIQUIDATIONS</span> <span className="text-muted-foreground">· {d.liquidations[0] ? `${d.liquidations.length} observed · last ${clock(d.liquidations[0].time)} · ${money(d.liquidations[0].price * d.liquidations[0].qty)} ${d.liquidations[0].side}` : 'feed connected · waiting for the next forced order (Binance sends these only when they happen)'}</span></span>}</div>
+              : <span><span className="text-bookmap-gold">◆ LIQUIDATIONS</span> <span className="text-muted-foreground">· {((l) => l ? `${d.liquidations.length} observed · last ${clock(l.time)} · ${money(l.price * l.qty)} ${l.side}` : null)(d.liquidations[0]) ?? 'feed connected · waiting for the next forced order (Binance sends these only when they happen)'}</span></span>}</div>
           </section>)}
         </div>
       </section>
