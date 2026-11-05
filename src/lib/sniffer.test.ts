@@ -8,7 +8,7 @@ describe("sniffer", () => {
     const r = rng(7), now = 120_000, prints: Print[] = [];
     let t = 1000, px = 80_000;
     while (t < now) { prints.push({ time: t, price: px, qty: 0.5 * (0.85 + r() * 0.3), side: "buy" }); px += r() < 0.5 ? 0 : 1; t += 2000 * (0.5 + r()); }
-    for (let i = 0; i < 200; i++) prints.push({ time: r() * now, price: 80_000 + r() * 50, qty: -Math.log(r()) ** 3 * 0.2 + 0.001, side: r() < 0.5 ? "buy" : "sell" });
+    for (let i = 0; i < 200; i++) prints.push({ time: r() * now, price: 80_000 + r() * 50, qty: (-Math.log(r())) ** 3 * 0.2 + 0.001, side: r() < 0.5 ? "buy" : "sell" });
     const top = sniff(prints, now)[0];
     expect(top.side).toBe("buy");
     expect(top.tier).toBe("likely");
