@@ -33,7 +33,7 @@ export function persistenceScore(times: number[], start: number, end: number) {
 export function priceScore(prices: number[], side: "buy" | "sell") {
   if (prices.length < 3) return 0;
   let ok = 0;
-  for (let i = 1; i < prices.length; i++) if (side === "buy" ? prices[i] >= prices[i - 1] : prices[i] <= prices[i - 1]) ok++;
+  for (let i = 1; i < prices.length; i++) { const a = prices[i - 1]!, b = prices[i]!; if (side === "buy" ? b >= a : b <= a) ok++; }
   return (ok / (prices.length - 1)) * 100;
 }
 
@@ -54,11 +54,11 @@ export function sniff(prints: Print[], now: number, windowMs = 120_000, minClips
     }
     if (best.length < minClips) continue;
     best.sort((a, b) => a.time - b.time);
-    const gaps = best.slice(1).map((p, i) => p.time - best[i].time).filter(g => g > 0);
+    const gaps = best.slice(1).map((p, i) => p.time - best[i]!.time).filter(g => g > 0);
     const filled = best.reduce((s, p) => s + p.qty, 0);
     const notional = best.reduce((s, p) => s + p.qty * p.price, 0);
     const povPct = sideVol ? (filled / sideVol) * 100 : 0;
-    const start = best[0].time, last = best[best.length - 1].time;
+    const start = best[0]!.time, last = best[best.length - 1]!.time;
     const vectors: SnifferVectors = {
       size: sizeScore(best.map(p => p.qty)), timing: timingScore(gaps), pov: povFootprint(povPct),
       persistence: persistenceScore(best.map(p => p.time), now - windowMs, now), price: priceScore(best.map(p => p.price), side),
