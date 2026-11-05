@@ -81,7 +81,15 @@ export function useBookmap(market: Market) {
         } catch { fail(); }
       };
       socket.onclose = fail; socket.onerror = fail;
-      if (trades) { trades.onmessage = socket.onmessage; trades.onclose = fail; trades.onerror = fail; }
+      // Trades/liquidations socket reconnects on its own so a drop never wipes the depth book.
+      if (trades) {
+        const handler = socket.onmessage;
+        const wire = (t: WebSocket) => {
+          t.onmessage = handler;
+          t.onclose = () => { if (alive()) setTimeout(() => { if (alive()) { const n = new WebSocket(t.url); ws2 = n; wire(n); } }, 2000); };
+        };
+        wire(trades);
+      }
     };
     connect();
     const timer = setInterval(() => {

@@ -71,9 +71,7 @@ function BookmapPage() {
             </div>
             <div className="h-[640px] 2xl:h-[740px]"><MarketCanvas data={d} macro={scale === 'macro' || (scale === 'reference' && d.market === 'spot')} minutes={minutes} bubbleMin={bubbleMin} /></div>
             <div className="border-t border-border px-2 py-1.5 text-[9px] text-muted-foreground">Snapshot ≤ {d.market === 'spot' ? '5,000' : '1,000'} levels/side · blank depth = unknown{d.frames.length ? ` · ${d.frames.length}s captured` : ''}</div>
-            <div className="border-t border-border px-2 py-1.5 text-[9px]">{d.market === 'spot'
-              ? <span className="text-muted-foreground">Spot has no leverage, so there are no spot liquidations. Liquidations appear on the Perpetual panel.</span>
-              : <span><span className="text-bookmap-gold">◆ LIQUIDATIONS</span> <span className="text-muted-foreground">· {((l) => l ? `${d.liquidations.length} observed · last ${clock(l.time)} · ${money(l.price * l.qty)} ${l.side}` : null)(d.liquidations[0]) ?? 'feed connected · waiting for the next forced order (Binance sends these only when they happen)'}</span></span>}</div>
+            {d.market === 'perps' && <div className="border-t border-border px-2 py-1.5 text-[9px]"><span><span className="text-bookmap-gold">◆ LIQUIDATIONS</span> <span className="text-muted-foreground">· {((l) => l ? `${d.liquidations.length} observed · last ${clock(l.time)} · ${money(l.price * l.qty)} ${l.side}` : null)(d.liquidations[0]) ?? 'feed connected · waiting for the next forced order (Binance sends these only when they happen)'}</span></span></div>}
           </section>)}
         </div>
       </section>
