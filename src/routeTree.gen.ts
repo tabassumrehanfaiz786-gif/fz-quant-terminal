@@ -14,6 +14,7 @@ import { Route as BookmapRouteImport } from './routes/bookmap'
 import { Route as DeskRouteImport } from './routes/desk'
 import { Route as IcebergsRouteImport } from './routes/icebergs'
 import { Route as LeadlagRouteImport } from './routes/leadlag'
+import { Route as SnifferRouteImport } from './routes/sniffer'
 import { Route as TapeRouteImport } from './routes/tape'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,6 +42,11 @@ const LeadlagRoute = LeadlagRouteImport.update({
   path: '/leadlag',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SnifferRoute = SnifferRouteImport.update({
+  id: '/sniffer',
+  path: '/sniffer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TapeRoute = TapeRouteImport.update({
   id: '/tape',
   path: '/tape',
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/desk': typeof DeskRoute
   '/icebergs': typeof IcebergsRoute
   '/leadlag': typeof LeadlagRoute
+  '/sniffer': typeof SnifferRoute
   '/tape': typeof TapeRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/desk': typeof DeskRoute
   '/icebergs': typeof IcebergsRoute
   '/leadlag': typeof LeadlagRoute
+  '/sniffer': typeof SnifferRoute
   '/tape': typeof TapeRoute
 }
 export interface FileRoutesById {
@@ -70,15 +78,25 @@ export interface FileRoutesById {
   '/desk': typeof DeskRoute
   '/icebergs': typeof IcebergsRoute
   '/leadlag': typeof LeadlagRoute
+  '/sniffer': typeof SnifferRoute
   '/tape': typeof TapeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/bookmap' | '/desk' | '/icebergs' | '/leadlag' | '/tape'
+  fullPaths:
+    '/' | '/bookmap' | '/desk' | '/icebergs' | '/leadlag' | '/sniffer' | '/tape'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/bookmap' | '/desk' | '/icebergs' | '/leadlag' | '/tape'
+  to:
+    '/' | '/bookmap' | '/desk' | '/icebergs' | '/leadlag' | '/sniffer' | '/tape'
   id:
-    '__root__' | '/' | '/bookmap' | '/desk' | '/icebergs' | '/leadlag' | '/tape'
+    | '__root__'
+    | '/'
+    | '/bookmap'
+    | '/desk'
+    | '/icebergs'
+    | '/leadlag'
+    | '/sniffer'
+    | '/tape'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -87,6 +105,7 @@ export interface RootRouteChildren {
   DeskRoute: typeof DeskRoute
   IcebergsRoute: typeof IcebergsRoute
   LeadlagRoute: typeof LeadlagRoute
+  SnifferRoute: typeof SnifferRoute
   TapeRoute: typeof TapeRoute
 }
 
@@ -127,6 +146,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LeadlagRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sniffer': {
+      id: '/sniffer'
+      path: '/sniffer'
+      fullPath: '/sniffer'
+      preLoaderRoute: typeof SnifferRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tape': {
       id: '/tape'
       path: '/tape'
@@ -143,6 +169,7 @@ const rootRouteChildren: RootRouteChildren = {
   DeskRoute: DeskRoute,
   IcebergsRoute: IcebergsRoute,
   LeadlagRoute: LeadlagRoute,
+  SnifferRoute: SnifferRoute,
   TapeRoute: TapeRoute,
 }
 export const routeTree = rootRouteImport

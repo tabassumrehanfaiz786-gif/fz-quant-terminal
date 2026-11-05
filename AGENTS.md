@@ -19,3 +19,4 @@
 - Dual Bookmap uses independent browser-only synchronized Spot and USD-M depth streams; pure bookmap helpers enforce futures sequence continuity and keep observed depth, executions, and liquidation histories bounded without affecting strategy decisions.
 - Iceberg visualization uses bounded observed session samples and the existing pure detector; display helpers deduplicate heavy-absorption alerts, and all hidden-order levels remain estimates rather than participant identification.
 - Cross-venue lead-lag radar uses browser-only Binance Spot/Perp and Coinbase ticker feeds sampled on a shared clock; pure src/lib/leadlag.ts does basis, lag correlation and fee-aware paper arb, never sending orders.
+- Hidden-order sniffer (/sniffer) uses pure src/lib/sniffer.ts on live public prints; results are estimates and never touch strategy decisions.

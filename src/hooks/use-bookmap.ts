@@ -25,7 +25,7 @@ export function useBookmap(market: Market) {
       const alive = () => !stopped && g === generation;
       const fail = () => {
         if (!alive()) return;
-        generation++; abort?.abort(); clearTimeout(watchdog); socket.close(); trades?.close();
+        generation++; abort?.abort(); clearTimeout(watchdog); socket.close(); ws2?.close();
         s.book = null; bridged = false; s.status = 'reconnecting'; publish();
         retry = setTimeout(connect, Math.min(30_000, 2000 * 2 ** Math.min(attempt++, 4)));
       };
