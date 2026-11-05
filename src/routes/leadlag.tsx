@@ -45,8 +45,12 @@ function useFeeds() {
       (d) => (d.type === "ticker" && d.best_bid ? (+d.best_bid + +d.best_ask) / 2 : null));
     const t = setInterval(() => {
       const p = px.current;
-      if (!p.spot || !p.perp || !p.cb) return;
-      setHist((h) => ({ spot: [...h.spot, p.spot].slice(-KEEP), perp: [...h.perp, p.perp].slice(-KEEP), cb: [...h.cb, p.cb].slice(-KEEP) }));
+      // Each venue samples independently so one blocked feed never freezes the others.
+      setHist((h) => {
+        const n = { ...h };
+        (Object.keys(n) as V[]).forEach((v) => { n[v] = p[v] ? [...h[v], p[v]].slice(-KEEP) : []; });
+        return n;
+      });
     }, STEP);
     return () => { stop = true; clearInterval(t); socks.forEach((s) => s.close()); };
   }, []);
@@ -59,7 +63,7 @@ function LeadLagPage() {
   const { hist, live } = useFeeds();
   const [fee, setFee] = useState(7.5);
   const last = (v: V) => hist[v].at(-1) ?? 0;
-  const ready = hist.spot.length > 30;
+  const ok = (v: V) => hist[v].length > 30;
 
   return (
     <main className="min-h-screen bg-background p-4 text-foreground">
@@ -93,9 +97,20 @@ function LeadLagPage() {
             <input type="number" min={0} step={0.5} value={fee} onChange={(e) => setFee(Math.max(0, +e.target.value))} className="w-16 rounded border bg-background px-1 py-0.5" />
           </label>
         </div>
-        {!ready ? <p className="text-xs text-muted-foreground">Collecting samples from all three venues…</p> : (
+        {(
           <div className="grid gap-3 md:grid-cols-3">
             {PAIRS.map(([a, b]) => {
+              if (!ok(a) || !ok(b)) {
+                const miss = [a, b].filter((v) => !ok(v));
+                return (
+                  <div key={a + b} className="rounded border p-3 text-xs">
+                    <div className="mb-1 font-medium">{NAMES[a]} vs {NAMES[b]}</div>
+                    <p className="text-muted-foreground">
+                      {miss.map((v) => live[v] ? `${NAMES[v]}: collecting samples…` : `${NAMES[v]} unreachable (may be blocked by your network) · retrying`).join(" · ")}
+                    </p>
+                  </div>
+                );
+              }
               const gap = basisBps(last(a), last(b));
               const ll = leadLag(hist[a], hist[b], MAXLAG);
               const edge = arbEdge(gap, fee);
