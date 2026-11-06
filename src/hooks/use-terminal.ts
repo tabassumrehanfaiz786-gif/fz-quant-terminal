@@ -6,8 +6,9 @@ type Feed = "connecting" | "live" | "down";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const parseRest = (r: any[]): Candle => ({
-  time: Math.floor(Number(r[0]) / 1000), open: +r[1], high: +r[2], low: +r[3], close: +r[4], volume: +r[5], buyVolume: +r[9],
+  time: +r[0], low: +r[1], high: +r[2], open: +r[3], close: +r[4], volume: +r[5], buyVolume: +r[5] / 2,
 });
+const GRAN: Record<Interval, number> = { "1m": 60, "5m": 300, "15m": 900 };
 
 export function useTerminal(interval: Interval) {
   const [, setTick] = useState(0);
@@ -31,22 +32,22 @@ export function useTerminal(interval: Interval) {
 
     (async () => {
       try {
-        let rows: (string | number)[][] | null = null;
-        for (const host of ["https://api.binance.com", "https://data-api.binance.vision", "https://api1.binance.com"]) {
+        // Coinbase returns max 300 candles per call, newest first: [time, low, high, open, close, volume].
+        const byTime = new Map<number, Candle>();
+        let end = Math.floor(Date.now() / 1000);
+        for (let page = 0; page < 4; page++) {
           if (cancelled) return;
-          try {
-            const res = await fetch(`${host}/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=1000`, { signal: AbortSignal.timeout(8000) });
-            if (!res.ok) continue;
-            const data = await res.json();
-            if (Array.isArray(data) && data.length && data.every((r) => Array.isArray(r) && r.length >= 10 && [0, 1, 2, 3, 4, 5, 9].every((i) => Number.isFinite(Number(r[i]))))) {
-              rows = data;
-              break;
-            }
-          } catch { /* Try the next public Binance endpoint. */ }
+          const start = end - gran * 300;
+          const res = await fetch(`${CB_REST}/products/BTC-USD/candles?granularity=${gran}&start=${new Date(start * 1000).toISOString()}&end=${new Date(end * 1000).toISOString()}`, { signal: AbortSignal.timeout(8000) });
+          if (!res.ok) break;
+          const data = await res.json();
+          if (!Array.isArray(data) || !data.length) break;
+          for (const r of data) if (Array.isArray(r) && r.length >= 6) byTime.set(+r[0], parseRest(r));
+          end = start;
         }
-        if (!rows) throw new Error("Candles unavailable");
+        if (!byTime.size) throw new Error("Candles unavailable");
         if (cancelled) return;
-        const hist = rows.map(parseRest);
+        const hist = [...byTime.values()].sort((a, b) => a.time - b.time).slice(-1000);
         const closed = hist.slice(0, -1);
         const { sweep, touch } = engines.current;
         for (const e of [sweep, touch]) {
@@ -65,23 +66,24 @@ export function useTerminal(interval: Interval) {
         setError("Binance candle history is unavailable. Paper results are incomplete.");
       }
       if (cancelled) return;
-      ws = new WebSocket(`wss://data-stream.binance.vision/ws/btcusdt@kline_${interval}`);
-      ws.onopen = () => setFeed("live");
-      ws.onclose = () => !cancelled && setFeed("down");
-      ws.onmessage = (ev) => {
-        const k = JSON.parse(ev.data).k;
-        const c: Candle = { time: Math.floor(k.t / 1000), open: +k.o, high: +k.h, low: +k.l, close: +k.c, volume: +k.v, buyVolume: +k.V };
+      // Build live candles from Coinbase trade prints.
+      ws = openMatches((m) => {
+        if (m.time / 1000 < (candles.current.at(-1)?.time ?? 0)) return;
+        const t = Math.floor(m.time / 1000 / gran) * gran;
         const arr = candles.current;
         const last = arr[arr.length - 1];
-        if (last && last.time === c.time) arr[arr.length - 1] = c;
-        else if (!last || c.time > last.time) { arr.push(c); if (arr.length > 1500) arr.shift(); }
         const { sweep, touch } = engines.current;
-        for (const e of [sweep, touch]) {
-          if (k.x) onCandleClose(e, c);
-          else managePrice(e, c.close, c.time);
+        if (last && last.time === t) {
+          last.high = Math.max(last.high, m.price); last.low = Math.min(last.low, m.price); last.close = m.price;
+          last.volume += m.qty; if (m.side === "buy") last.buyVolume += m.qty;
+        } else if (!last || t > last.time) {
+          if (last) for (const e of [sweep, touch]) onCandleClose(e, last);
+          arr.push({ time: t, open: m.price, high: m.price, low: m.price, close: m.price, volume: m.qty, buyVolume: m.side === "buy" ? m.qty : 0 });
+          if (arr.length > 1500) arr.shift();
         }
+        for (const e of [sweep, touch]) managePrice(e, m.price, t);
         bump();
-      };
+      }, () => setFeed("live"), () => { if (!cancelled) setFeed("down"); });
     })();
     return () => { cancelled = true; ws?.close(); cancelAnimationFrame(raf); };
   }, [interval, attempt]);
