@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createEngine, managePrice, onCandleClose, type Candle, type EngineState } from "@/lib/strategy";
+import { CB_REST, openMatches } from "@/lib/coinbase";
 
 export type Interval = "1m" | "5m" | "15m";
 type Feed = "connecting" | "live" | "down";

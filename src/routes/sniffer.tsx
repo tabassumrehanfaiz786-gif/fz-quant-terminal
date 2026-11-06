@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { openMatches } from "@/lib/coinbase";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { sniff, SNIFFER_WEIGHTS, type ParentEstimate, type Print, type SnifferVectors } from "@/lib/sniffer";

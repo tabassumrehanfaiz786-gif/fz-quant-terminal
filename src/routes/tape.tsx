@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { openMatches } from "@/lib/coinbase";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DEFAULT_TIERS, cohortFor, roundQty, tierFor, type Cohort, type Print, type Tier } from "@/lib/tape";
