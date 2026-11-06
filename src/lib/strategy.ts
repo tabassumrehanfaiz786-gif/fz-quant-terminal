@@ -187,7 +187,8 @@ function open(s: EngineState, side: Side, level: number, entry: number, structur
   s.position = {
     side, level, entry, entryTime: time, qty, initialQty: qty, stop: capped,
     tp1: side === "long" ? entry + c.tp1Distance : entry - c.tp1Distance,
-    target: side === "long" ? nextLevelAbove(entry) : nextLevelBelow(entry),
+    // Runner anchors to the next macro 10k strike from the traded level, not from the entry price.
+    target: side === "long" ? level + 10_000 : level - 10_000,
     tp1Hit: false, beMoved: false, realized: -entry * qty * c.feeRate,
   };
   s.armed[level] = false;
