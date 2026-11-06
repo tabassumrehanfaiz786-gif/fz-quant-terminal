@@ -22,6 +22,12 @@ describe("strategy rules", () => {
     expect(s.position!.qty).toBeCloseTo(s.position!.initialQty / 2);
     expect(s.position!.target).toBe(80000);
   });
+  it("short entered just above 80k targets 70k, not 80k", () => {
+    const s = createEngine("touch");
+    onCandleClose(s, k(79347, 80174, 79300, 80151.7));
+    expect(s.position!.side).toBe("short");
+    expect(s.position!.target).toBe(70000);
+  });
   it("blocks re-entry until a clean $1,000 retest", () => {
     const s = createEngine("touch");
     onCandleClose(s, k(70100, 70120, 69990, 70000));

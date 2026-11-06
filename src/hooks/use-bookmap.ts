@@ -18,10 +18,10 @@ export function useBookmap(market: Market) {
       s.book = null; bridged = false; s.lastDepth = 0; s.status = attempt ? 'reconnecting' : 'connecting'; publish();
       const buffer: (DepthEvent & { pu?: number })[] = [];
       const alternate = attempt % 2 === 1;
-      const url = market === 'spot' ? `${alternate ? 'wss://stream.binance.com:9443' : 'wss://data-stream.binance.vision'}/stream?streams=btcusdt@depth@100ms/btcusdt@aggTrade` : 'wss://fstream.binance.com/stream?streams=btcusdt@depth@100ms';
+      const url = market === 'spot' ? `${alternate ? 'wss://stream.binance.com:9443' : 'wss://data-stream.binance.vision'}/stream?streams=btcusdt@depth@100ms/btcusdt@aggTrade` : `${alternate ? 'wss://fstream.binance.info' : 'wss://fstream.binance.com'}/stream?streams=btcusdt@depth@100ms`;
       const socket = new WebSocket(url); ws = socket;
       // Binance now serves futures trades/liquidations on the /market route, separate from depth.
-      const trades = market === 'perps' ? new WebSocket('wss://fstream.binance.com/market/stream?streams=btcusdt@aggTrade/btcusdt@forceOrder') : undefined; ws2 = trades;
+      const trades = market === 'perps' ? new WebSocket((alternate ? 'wss://fstream.binance.info' : 'wss://fstream.binance.com') + '/market/stream?streams=btcusdt@aggTrade/btcusdt@forceOrder') : undefined; ws2 = trades;
       const alive = () => !stopped && g === generation;
       const fail = () => {
         if (!alive()) return;
@@ -35,7 +35,7 @@ export function useBookmap(market: Market) {
         if (!alive()) return;
         s.status = 'syncing'; publish(); abort = new AbortController();
         try {
-          const endpoint = market === 'spot' ? `${alternate ? 'https://api.binance.com' : 'https://data-api.binance.vision'}/api/v3/depth?symbol=BTCUSDT&limit=5000` : 'https://fapi.binance.com/fapi/v1/depth?symbol=BTCUSDT&limit=1000';
+          const endpoint = market === 'spot' ? `${alternate ? 'https://api.binance.com' : 'https://data-api.binance.vision'}/api/v3/depth?symbol=BTCUSDT&limit=5000` : `${alternate ? 'https://fapi.binance.info' : 'https://fapi.binance.com'}/fapi/v1/depth?symbol=BTCUSDT&limit=1000`;
           const response = await fetch(endpoint, { signal: abort.signal });
           if (!response.ok) throw new Error('Snapshot unavailable');
           const snapshot = await response.json() as DepthSnapshot;

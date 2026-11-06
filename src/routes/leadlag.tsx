@@ -29,9 +29,12 @@ function useFeeds() {
   useEffect(() => {
     let stop = false;
     const socks: WebSocket[] = [];
-    const open = (v: V, url: string, onOpen: (w: WebSocket) => void, parse: (d: any) => number | null) => {
+    const open = (v: V, url: string | string[], onOpen: (w: WebSocket) => void, parse: (d: any) => number | null) => {
+      const urls = Array.isArray(url) ? url : [url];
+      let n = 0;
       const go = () => {
-        const w = new WebSocket(url); socks.push(w);
+        // Rotate through mirror hosts on each reconnect so a blocked domain doesn't freeze the feed.
+        const w = new WebSocket(urls[n++ % urls.length]!); socks.push(w);
         w.onopen = () => { setLive((l) => ({ ...l, [v]: true })); onOpen(w); };
         w.onmessage = (e) => { const p = parse(JSON.parse(e.data)); if (p) px.current[v] = p; };
         w.onclose = () => { setLive((l) => ({ ...l, [v]: false })); if (!stop) setTimeout(go, 2000); };
@@ -40,7 +43,7 @@ function useFeeds() {
     };
     const bt = (d: any) => (d.b && d.a ? (+d.b + +d.a) / 2 : null);
     open("spot", "wss://data-stream.binance.vision/ws/btcusdt@bookTicker", () => {}, bt);
-    open("perp", "wss://fstream.binance.com/ws/btcusdt@bookTicker", () => {}, bt);
+    open("perp", ["wss://fstream.binance.com/ws/btcusdt@bookTicker", "wss://fstream.binance.info/ws/btcusdt@bookTicker", "wss://fstream.binancefuture.com/ws/btcusdt@bookTicker"], () => {}, bt);
     open("cb", "wss://ws-feed.exchange.coinbase.com", (w) => w.send(JSON.stringify({ type: "subscribe", product_ids: ["BTC-USD"], channels: ["ticker"] })),
       (d) => (d.type === "ticker" && d.best_bid ? (+d.best_bid + +d.best_ask) / 2 : null));
     const t = setInterval(() => {
