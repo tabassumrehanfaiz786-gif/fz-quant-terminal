@@ -23,6 +23,7 @@ export function useTerminal(interval: Interval) {
   useEffect(() => {
     let ws: WebSocket | null = null;
     let cancelled = false;
+    const gran = GRAN[interval];
     let raf = 0;
     const bump = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; setTick((t) => t + 1); }); };
     candles.current = [];
