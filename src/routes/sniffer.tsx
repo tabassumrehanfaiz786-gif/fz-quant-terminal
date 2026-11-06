@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { openMatches } from "@/lib/coinbase";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { sniff, SNIFFER_WEIGHTS, type ParentEstimate, type Print, type SnifferVectors } from "@/lib/sniffer";
@@ -31,14 +32,10 @@ function SnifferPage() {
   useEffect(() => {
     let stop = false, ws: WebSocket | undefined;
     const go = () => {
-      ws = new WebSocket("wss://data-stream.binance.vision/ws/btcusdt@aggTrade");
-      ws.onopen = () => setLive(true);
-      ws.onmessage = e => {
-        const d = JSON.parse(e.data);
-        prints.current.push({ time: +d.T, price: +d.p, qty: +d.q, side: d.m ? "sell" : "buy" });
+      ws = openMatches(m => {
+        prints.current.push({ time: m.time, price: m.price, qty: m.qty, side: m.side });
         if (prints.current.length > 20_000) prints.current.splice(0, 5_000);
-      };
-      ws.onclose = () => { setLive(false); if (!stop) setTimeout(go, 2000); };
+      }, () => setLive(true), () => { setLive(false); if (!stop) setTimeout(go, 2000); });
     };
     go();
     const t = setInterval(() => {

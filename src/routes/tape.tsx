@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { openMatches } from "@/lib/coinbase";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DEFAULT_TIERS, cohortFor, roundQty, tierFor, type Cohort, type Print, type Tier } from "@/lib/tape";
@@ -31,13 +32,7 @@ function useTape() {
     let stop = false;
     let retry: ReturnType<typeof setTimeout>;
     const connect = () => {
-      ws = new WebSocket("wss://data-stream.binance.vision/ws/btcusdt@aggTrade");
-      ws.onopen = () => setLive(true);
-      ws.onmessage = (ev) => {
-        const d = JSON.parse(ev.data);
-        buf.current.push({ id: d.a, time: d.T, price: +d.p, qty: +d.q, side: d.m ? "sell" : "buy" });
-      };
-      ws.onclose = () => { setLive(false); if (!stop) retry = setTimeout(connect, 2000); };
+      ws = openMatches((m) => { buf.current.push(m); }, () => setLive(true), () => { setLive(false); if (!stop) retry = setTimeout(connect, 2000); });
     };
     connect();
     const flush = setInterval(() => {
